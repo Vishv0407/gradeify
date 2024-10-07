@@ -1,28 +1,48 @@
 const Semester = require('../models/Semester');
 const User = require('../models/User');
+const Course = require('../models/Course');
 
 // Add Semester
-exports.addSemester = async (req, res) => {
+exports.addSemesterWithCourses = async (req, res) => {
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
+
   try {
-    const { number, sgpa, cgpa , userId} = req.body;
-    // const userId = req.body; // assuming user info is available in req.user after authentication
+    const { userId, semesterNumber, cgpa, sgpa, courses, totalCredits, totalGrades } = req.body;
 
+    // // Create and save the courses in one go
+    // const savedCourses = await Course.insertMany(courses.map(course => ({ ...course, userId })));
+
+    // Get the course ids to link them with the semester
+    // const courseIds = courses.map(course => course._id);
+    console.log(courses);
+
+    // Create a new semester
     const newSemester = new Semester({
-      number,
-      sgpa,
+      userId,
+      semesterNumber,
       cgpa,
-      user: userId
+      sgpa,
+      courses,
+      totalCredits,
+      totalGrades
     });
 
-    await newSemester.save();
+    // Save the semester
+    const savedSemester = await newSemester.save();
 
-    // Push semester reference to user's semesters array
+    // Update the user's semester array
     await User.findByIdAndUpdate(userId, {
-      $push: { semesters: newSemester._id }
+      $push: { semesters: savedSemester._id },
     });
 
-    res.status(201).json(newSemester);
+    // await session.commitTransaction();
+    // session.endSession();
+
+    res.status(201).json(savedSemester);
   } catch (error) {
+    // await session.abortTransaction();
+    // session.endSession();
     res.status(500).json({ message: error.message });
   }
 };

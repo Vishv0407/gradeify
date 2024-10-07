@@ -7,8 +7,6 @@ const Home = () => {
   const navigate = useNavigate(); // For navigation
 
   const handleLogout = () => {
-    // Clear user session or token here, if you're using one.
-    // For example, if you're using localStorage, you can clear it like this:
     localStorage.removeItem('user'); // Optional if you're storing user data locally
 
     // Redirect to the login page (App component)

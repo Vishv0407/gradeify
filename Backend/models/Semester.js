@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const semesterSchema = new mongoose.Schema({
-    number: {
+    semesterNumber: {
       type: Number,
       required: true
     },
@@ -19,10 +19,16 @@ const semesterSchema = new mongoose.Schema({
         ref: 'Course'
       }
     ],
-    user: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
+    },
+    totalCredits: {
+      type: Number,
+    },
+    totalGrades:{
+      type: Number,
     }
   });
   

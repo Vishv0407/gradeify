@@ -2,30 +2,28 @@ const Course = require('../models/Course');
 const Semester = require('../models/Semester');
 
 // Add Course
-exports.addCourse = async (req, res) => {
+exports.addCourses = async (req, res) => {
   try {
-    const { name, credit, grade, semesterId } = req.body;
-    // const {  } = req.params; // semesterId from URL parameters
+    const { courses, semesterId, userId } = req.body;
 
-    const newCourse = new Course({
-      name,
-      credit,
-      grade,
-      semester: semesterId
-    });
+    // Extract course details and prepare the array for insertion
+    const courseData = courses.map(course => ({
+      courseCode: course.courseCode,
+      credit: course.credit,
+      cgpa: course.cgpa,
+      semesterId,
+      userId
+    }));
 
-    await newCourse.save();
+    // Save all courses in one go
+    const savedCourses = await Course.insertMany(courseData);
 
-    // Push course reference to the semester's courses array
-    await Semester.findByIdAndUpdate(semesterId, {
-      $push: { courses: newCourse._id }
-    });
-
-    res.status(201).json(newCourse);
+    res.status(201).json(savedCourses);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Update Course
 exports.updateCourse = async (req, res) => {

@@ -33,3 +33,25 @@ exports.addUser = async (req, res) => {
       res.status(500).json({ message: error.message });
     }
 };
+
+exports.getUserDetails = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email })
+      .populate({
+        path: 'semesters',
+        populate: {
+          path: 'courses', // populate the courses for each semester
+          model: 'Course',
+        },
+      });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
