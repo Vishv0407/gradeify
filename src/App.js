@@ -5,17 +5,18 @@ import Welcome from './pages/Welcome';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Semesters from './pages/Semesters';
+import { UserProvider } from './context/UserContext';
 
 function App() {
   return (
-    <div>
+    <UserProvider>
       <Routes>
         <Route path='/' element={<Welcome />}/>
         <Route path='/home' element={<Home />}/>
         <Route path='/dashboard' element={<Dashboard />}/>
         <Route path='/semesters' element={<Semesters />}/>
       </Routes>
-    </div>
+    </UserProvider>
   )
 }
 

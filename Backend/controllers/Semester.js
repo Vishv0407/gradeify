@@ -8,7 +8,7 @@ exports.addSemesterWithCourses = async (req, res) => {
   // session.startTransaction();
 
   try {
-    const { userId, semesterNumber, cgpa, sgpa, courses, totalCredits, totalGrades } = req.body;
+    const { userId, semesterNumber, sgpa, courses, totalCredits, totalGrades } = req.body;
 
     // // Create and save the courses in one go
     // const savedCourses = await Course.insertMany(courses.map(course => ({ ...course, userId })));
@@ -21,7 +21,6 @@ exports.addSemesterWithCourses = async (req, res) => {
     const newSemester = new Semester({
       userId,
       semesterNumber,
-      cgpa,
       sgpa,
       courses,
       totalCredits,
@@ -50,22 +49,26 @@ exports.addSemesterWithCourses = async (req, res) => {
 // Update Semester
 exports.updateSemester = async (req, res) => {
   try {
-    const {sgpa, cgpa, semesterId} = req.body;
+      const { semesterId } = req.params; // Get the semesterId from URL parameters
+      const { semesterNumber, sgpa, courses, totalCredits, totalGrades } = req.body;
 
-    const updatedSemester = await Semester.findByIdAndUpdate(semesterId, {
-        sgpa,
-        cgpa
-    }, { new: true });
+      // Find the semester by ID and update it
+      const updatedSemester = await Semester.findByIdAndUpdate(
+          semesterId,
+          { semesterNumber, sgpa, courses, totalCredits, totalGrades },
+          { new: true } // Return the updated document
+      );
 
-    if (!updatedSemester) {
-      return res.status(404).json({ message: 'Semester not found' });
-    }
+      if (!updatedSemester) {
+          return res.status(404).json({ message: 'Semester not found' });
+      }
 
-    res.json(updatedSemester);
+      res.json(updatedSemester); // Respond with the updated semester data
   } catch (error) {
-    res.status(500).json({ message: error.message });
+      res.status(500).json({ message: error.message });
   }
 };
+
 
 // Delete Semester
 exports.deleteSemester = async (req, res) => {

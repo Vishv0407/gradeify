@@ -1,50 +1,121 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { UserContext } from '../context/UserContext';
+import { backend } from '../data';
 
 const Dashboard = () => {
-    const location = useLocation();
-    const user = location.state?.user; // Assumes you are passing the user on login
-    const [semesters, setSemesters] = useState([]);
+    const { user, semesters = [], setSemesters, logout } = useContext(UserContext); // Default semesters to an empty array
     const [semesterNumber, setSemesterNumber] = useState('');
     const [courses, setCourses] = useState([{ courseCode: '', credit: '', cgpa: '' }]);
     const [finalCgpa, setFinalCgpa] = useState(null);
     const [finalSgpa, setFinalSgpa] = useState(null);
+    const [isPressed, setIsPressed] = useState(false);
     const navigate = useNavigate();
 
-    // Fetch the user data with their semester details
+    // Fetch user data with their semester details
     useEffect(() => {
         if (user) {
             fetchUserData();
         }
     }, [user]);
 
+    // Calculate CGPA whenever courses or semesters change
+    useEffect(() => {
+        calculateCGPA();
+    }, [courses, semesters]); // Adding dependencies
+
     const fetchUserData = async () => {
         try {
-            const response = await axios.post('http://localhost:4000/api/auth/getUser', { email: user.email });
+            const response = await axios.post(`${backend}/api/auth/getUser`, { email: user.email });
             const userData = response.data;
 
             if (userData.semesters.length > 0) {
-                // Set the semesters and update the semester number to next one
                 setSemesters(userData.semesters);
-                setSemesterNumber(userData.semesters.length + 1); // Next semester number
+                setSemesterNumber(userData.semesters.length + 1);
             } else {
-                // Ask user to add the first semester
-                setSemesterNumber(1); // First semester
+                setSemesterNumber(1);
             }
         } catch (error) {
             console.error('Error fetching user data:', error);
         }
     };
 
+    const calculateCGPA = () => {
+        let totalCredits = 0;
+        let weightedSum = 0;
+
+        // Add previous semesters' contributions to CGPA
+        semesters.forEach(sem => {
+            if (!isNaN(sem.totalCredits) && !isNaN(sem.totalGrades)) {
+                totalCredits += parseFloat(sem.totalCredits);
+                weightedSum += parseFloat(sem.totalGrades);
+            }
+        });
+
+        // Calculate current semester's total credits and weighted sum
+        const currentTotalCredits = courses.reduce((acc, course) => {
+            const credit = parseFloat(course.credit);
+            return acc + (isNaN(credit) ? 0 : credit);
+        }, 0);
+
+        const currentWeightedSum = courses.reduce((acc, course) => {
+            const credit = parseFloat(course.credit);
+            const courseCgpa = parseFloat(course.cgpa);
+            return acc + (isNaN(credit) || isNaN(courseCgpa) ? 0 : credit * courseCgpa);
+        }, 0);
+
+        // Calculate current SGPA
+        const currentSGPA = currentTotalCredits > 0 ? currentWeightedSum / currentTotalCredits : 0;
+
+        // Add current semester's contributions to total CGPA
+        totalCredits += currentTotalCredits;
+        weightedSum += currentWeightedSum;
+
+        // Final CGPA calculation
+        const cgpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
+
+        setFinalCgpa(cgpa.toFixed(2)); // Set CGPA
+        setFinalSgpa(currentSGPA.toFixed(2)); // Set SGPA
+    };
+
+    // Check if inputs are valid and change state to reflect "pressed"
+    const checkInputsAndSetPress = () => {
+        const areInputsValid = courses.every(course =>
+            course.courseCode !== '' &&
+            !isNaN(parseFloat(course.credit)) &&
+            !isNaN(parseFloat(course.cgpa))
+        );
+
+        if (areInputsValid) {
+            setIsPressed(true);
+        } else {
+            alert('Please fill in all the course fields correctly.');
+            setIsPressed(false);
+        }
+    };
+
+    // Combined function to calculate CGPA and check inputs
+    const calculateCGPAWithPressCheck = () => {
+        checkInputsAndSetPress();
+        calculateCGPA();
+    };
+
     // Handle course input change
     const handleCourseChange = (index, field, value) => {
+        if (field === 'credit' || field === 'cgpa') {
+            const parsedValue = parseFloat(value);
+            if (isNaN(parsedValue) && value !== '') {
+                return; // Prevent setting invalid values
+            }
+        }
+
         const updatedCourses = [...courses];
         updatedCourses[index][field] = value;
         setCourses(updatedCourses);
     };
 
-    // Handle adding new course
+    // Handle adding a new course
     const handleAddCourse = () => {
         setCourses([...courses, { courseCode: '', credit: '', cgpa: '' }]);
     };
@@ -53,86 +124,45 @@ const Dashboard = () => {
     const handleClearInputs = () => {
         setCourses([{ courseCode: '', credit: '', cgpa: '' }]);
         setFinalCgpa(null);
+        setFinalSgpa(null);
+        setIsPressed(false);
     };
 
-    // Calculate CGPA based on courses entered
-    const calculateCGPA = () => {
-        let totalCredits = 0;
-        let weightedSum = 0;
-    
-        // Add the previous semesters' contributions to CGPA
-        semesters.forEach(sem => {
-            if (!isNaN(sem.cgpa) && !isNaN(sem.totalCredits)) {
-                totalCredits += parseFloat(sem.totalCredits);
-                weightedSum += parseFloat(sem.totalGrades); 
-            }
-        });
-    
-        // Now, calculate SGPA for the current semester
-        const currentTotalCredits = courses.reduce((acc, course) => {
-            const credit = parseFloat(course.credit);
-            return acc + (isNaN(credit) ? 0 : credit); // Add course credits if valid
-        }, 0);
-    
-        const currentWeightedSum = courses.reduce((acc, course) => {
-            const credit = parseFloat(course.credit);
-            const courseCgpa = parseFloat(course.cgpa);
-            return acc + (isNaN(credit) || isNaN(courseCgpa) ? 0 : credit * courseCgpa); // Weighted sum of current courses
-        }, 0);
-    
-        const currentSGPA = currentTotalCredits > 0 ? currentWeightedSum / currentTotalCredits : 0;
-    
-        // Add the current semester's contributions to CGPA
-        totalCredits += currentTotalCredits;
-        weightedSum += currentWeightedSum;
-    
-        // Final CGPA calculation
-        const cgpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
-    
-        setFinalCgpa(cgpa.toFixed(2)); // Set CGPA
-        setFinalSgpa(currentSGPA.toFixed(2)); // Set SGPA
-    };
-    
     // Handle saving semester and courses to backend
     const handleSaveCGPA = async () => {
         try {
-
-            // Calculate total credits and total grades for the current semester
             let totalCredits = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
-                return acc + (isNaN(credit) ? 0 : credit); // Sum up valid credits
+                return acc + (isNaN(credit) ? 0 : credit);
             }, 0);
 
             let totalGrades = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
                 const cgpa = parseFloat(course.cgpa);
-                return acc + (isNaN(credit) || isNaN(cgpa) ? 0 : credit * cgpa); // Sum up valid grades (credit * CGPA)
+                return acc + (isNaN(credit) || isNaN(cgpa) ? 0 : credit * cgpa);
             }, 0);
-            
+
             // Add courses first
-            const courseResponse = await axios.post('http://localhost:4000/api/course/addCourses', {
+            const courseResponse = await axios.post(`${backend}/api/course/addCourses`, {
                 courses,
                 userId: user._id,
                 semesterId: semesterNumber
             });
 
-            // After courses are saved, add the semester
             const courseIds = courseResponse.data.map(course => course._id);
 
-            await axios.post('http://localhost:4000/api/semester/addSemester', {
+            await axios.post(`${backend}/api/semester/addSemester`, {
                 userId: user._id,
                 semesterNumber,
-                cgpa: finalCgpa,
-                sgpa: finalSgpa, // Assuming SGPA = CGPA for now
+                sgpa: finalSgpa,
                 courses: courseIds,
                 totalCredits: totalCredits,
-                totalGrades: totalGrades 
+                totalGrades: totalGrades
             });
 
             alert('Semester and courses saved successfully!');
-            fetchUserData(); // Refresh user data after saving
-            handleClearInputs(); // Clear input fields after saving
-
+            fetchUserData();
+            handleClearInputs();
         } catch (error) {
             console.error('Error saving semester and courses:', error);
             alert('Failed to save semester data');
@@ -141,42 +171,34 @@ const Dashboard = () => {
 
     // Handle logout
     const handleLogout = async () => {
-        try {
-            // await axios.post('http://localhost:4000/api/auth/logout');
-            navigate('/'); // Redirect to login page
-        } catch (error) {
-            console.error('Error logging out:', error);
-        }
+        logout();
+        navigate("/");
     };
 
     const knowMoreHandler = () => {
-        // console.log(semesters);
-        navigate('/semesters', { state: { semesters: semesters } } );
-    }
+        navigate('/semesters', { state: { semesters: semesters } });
+    };
 
     return (
         <div className="dashboard-container">
             <header className="dashboard-header">
-                <h1>Welcome, {user.name}</h1>
+                <h1>Welcome, {user ? user.name : 'Guest'}</h1>
                 <button onClick={handleLogout} className="logout-button">Log Out</button>
             </header>
 
-            {/* Display current CGPA and previous semester's SGPA */}
             {semesters.length > 0 && (
                 <div className="cgpa-info">
-                    <h3>Your Current CGPA: {semesters[semesters.length - 1].cgpa}</h3>
+                    <h3>Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
                     <h4>Previous Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4>
                 </div>
             )}
 
-            <button onClick={knowMoreHandler}> Know more</button>
+            <button onClick={knowMoreHandler}>Know more</button>
 
-            {/* Add New Semester */}
             <section className="add-semester">
                 <h2>Add New Semester</h2>
                 <h3>Semester: {semesterNumber}</h3>
 
-                {/* Course Input Fields */}
                 <form>
                     {courses.map((course, index) => (
                         <div key={index} className="course-input">
@@ -215,23 +237,23 @@ const Dashboard = () => {
                 </form>
             </section>
 
-            {/* Calculate CGPA Button */}
-
             <section className="cgpa-section">
-                <button onClick={calculateCGPA} className="calculate-cgpa-button">
-                    Calculate CGPA
-                </button>
+                <button onClick={calculateCGPAWithPressCheck}>Calculate CGPA</button>
 
-                {finalCgpa && (
-                    <div className="cgpa-result">
-                        <h2>Your Calculated CGPA: {finalCgpa}</h2>
-                        <h3>Your Calculated SGPA: {finalSgpa}</h3>
-                        <button onClick={handleSaveCGPA} className="save-cgpa-button">Save CGPA</button>
-                        <button onClick={handleClearInputs} className="clear-inputs-button">Clear</button>
+                {isPressed && (
+                    <div>
+                        <h3>Current Semester SGPA: {finalSgpa}</h3>
+                        <h4>Total CGPA: {finalCgpa}</h4>
+                    </div>
+                )}
+
+                {isPressed && (
+                    <div className="action-buttons">
+                        <button onClick={handleSaveCGPA}>Save CGPA</button>
+                        <button onClick={handleClearInputs}>Clear</button>
                     </div>
                 )}
             </section>
-
         </div>
     );
 };

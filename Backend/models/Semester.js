@@ -9,10 +9,6 @@ const semesterSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
-    cgpa: {
-      type: Number,
-      required: true
-    },
     courses: [
       {
         type: mongoose.Schema.Types.ObjectId,
