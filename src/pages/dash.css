@@ -1,0 +1,68 @@
+/* src/pages/Dashboard.css */
+.dashboard-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.logout-button {
+    padding: 10px 20px;
+    background-color: #ff4d4f;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.cgpa-info {
+    margin-bottom: 20px;
+}
+
+.add-semester {
+    margin-bottom: 40px;
+}
+
+.course-input {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.course-input label {
+    margin-bottom: 5px;
+}
+
+.course-input input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.add-semester button {
+    margin-right: 10px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.add-semester button[type="button"] {
+    background-color: #1890ff;
+    color: white;
+}
+
+.add-semester button[type="button"]:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.sgpa-graph-section {
+    margin-bottom: 40px;
+}

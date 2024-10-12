@@ -1,3 +1,4 @@
+// src/context/UserContext.js
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { backend } from '../data';
@@ -41,10 +42,10 @@ export const UserProvider = ({ children }) => {
 
     // Load user data from localStorage and set it in state
     useEffect(() => {
-        if (user) {
+        if (user && user.email) {
             fetchUserData(user.email);
         }
-    }, [user]);
+    }, [user?.email]); // Only fetch if email changes
 
     // Clear user data on logout
     const logout = () => {
@@ -54,10 +55,8 @@ export const UserProvider = ({ children }) => {
     };
 
     return (
-        <UserContext.Provider value={{ user, semesters, setUser, setSemesters, fetchUserData, logout }}>
+        <UserContext.Provider value={{ user, semesters, setSemesters, fetchUserData, logout }}>
             {children}
         </UserContext.Provider>
     );
 };
-
-// export default UserProvider;

@@ -1,33 +1,39 @@
+// src/pages/Dashboard.js
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { UserContext } from '../context/UserContext';
 import { backend } from '../data';
+import SgpaGraph from '../components/SgpaGraph';
+import SemesterGraph from '../components/SemesterGraph';
+import { motion, AnimatePresence } from 'framer-motion';
+import './dash.css'; // Optional: Add styling as needed
+import Semesters from './Semesters';
 
 const Dashboard = () => {
-    const { user, semesters = [], setSemesters, logout } = useContext(UserContext); // Default semesters to an empty array
+    const { user, semesters = [], setSemesters, logout } = useContext(UserContext);
     const [semesterNumber, setSemesterNumber] = useState('');
     const [courses, setCourses] = useState([{ courseCode: '', credit: '', cgpa: '' }]);
     const [finalCgpa, setFinalCgpa] = useState(null);
     const [finalSgpa, setFinalSgpa] = useState(null);
     const [isPressed, setIsPressed] = useState(false);
+    const [selectedSemester, setSelectedSemester] = useState(null); // For SemesterGraph modal
+    const [barChartData, setBarChartData] = useState(null);
     const navigate = useNavigate();
 
-    // Fetch user data with their semester details
     useEffect(() => {
-        if (user) {
-            fetchUserData();
+        if (user && user.email) {
+            fetchUserData(user.email);
         }
-    }, [user]);
+    }, [user?.email]);
 
-    // Calculate CGPA whenever courses or semesters change
     useEffect(() => {
         calculateCGPA();
-    }, [courses, semesters]); // Adding dependencies
+    }, [courses, semesters]);
 
-    const fetchUserData = async () => {
+    const fetchUserData = async (email) => {
         try {
-            const response = await axios.post(`${backend}/api/auth/getUser`, { email: user.email });
+            const response = await axios.post(`${backend}/api/auth/getUser`, { email });
             const userData = response.data;
 
             if (userData.semesters.length > 0) {
@@ -75,11 +81,54 @@ const Dashboard = () => {
         // Final CGPA calculation
         const cgpa = totalCredits > 0 ? weightedSum / totalCredits : 0;
 
-        setFinalCgpa(cgpa.toFixed(2)); // Set CGPA
-        setFinalSgpa(currentSGPA.toFixed(2)); // Set SGPA
+        setFinalCgpa(cgpa.toFixed(2));
+        setFinalSgpa(currentSGPA.toFixed(2));
+
+        // Prepare data for SgpaGraph
+        // (Assuming you want to show SGPA over all semesters, including the current one)
+        const sgpaGraphData = {
+            labels: [...semesters.map((_, index) => `Semester ${index + 1}`), `Semester ${semesterNumber}`],
+            datasets: [
+                {
+                    label: 'SGPA',
+                    data: [...semesters.map(sem => parseFloat(sem.sgpa) || 0), parseFloat(currentSGPA) || 0],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(255, 99, 132, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
+                    tension: 0.4, // Smooth curves
+                },
+            ],
+        };
+
+        // Update SgpaGraph data
+        // Assuming SgpaGraph component can accept data as prop directly
+        // Otherwise, manage it via state and pass as a prop
+
+        // Prepare data for Semester Graph
+        if (selectedSemester !== null) {
+            const semester = semesters[selectedSemester];
+            if (semester && semester.courses) {
+                const graphData = {
+                    labels: semester.courses.map(course => course.courseCode || 'N/A'),
+                    datasets: [
+                        {
+                            label: 'Course CGPA',
+                            data: semester.courses.map(course => parseFloat(course.cgpa) || 0),
+                            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        },
+                    ],
+                };
+                setBarChartData(graphData);
+            }
+        } else {
+            setBarChartData(null);
+        }
     };
 
-    // Check if inputs are valid and change state to reflect "pressed"
     const checkInputsAndSetPress = () => {
         const areInputsValid = courses.every(course =>
             course.courseCode !== '' &&
@@ -95,13 +144,11 @@ const Dashboard = () => {
         }
     };
 
-    // Combined function to calculate CGPA and check inputs
     const calculateCGPAWithPressCheck = () => {
         checkInputsAndSetPress();
         calculateCGPA();
     };
 
-    // Handle course input change
     const handleCourseChange = (index, field, value) => {
         if (field === 'credit' || field === 'cgpa') {
             const parsedValue = parseFloat(value);
@@ -115,20 +162,19 @@ const Dashboard = () => {
         setCourses(updatedCourses);
     };
 
-    // Handle adding a new course
     const handleAddCourse = () => {
         setCourses([...courses, { courseCode: '', credit: '', cgpa: '' }]);
     };
 
-    // Clear input fields
     const handleClearInputs = () => {
         setCourses([{ courseCode: '', credit: '', cgpa: '' }]);
         setFinalCgpa(null);
         setFinalSgpa(null);
         setIsPressed(false);
+        setBarChartData(null);
+        setSelectedSemester(null);
     };
 
-    // Handle saving semester and courses to backend
     const handleSaveCGPA = async () => {
         try {
             let totalCredits = courses.reduce((acc, course) => {
@@ -161,7 +207,7 @@ const Dashboard = () => {
             });
 
             alert('Semester and courses saved successfully!');
-            fetchUserData();
+            fetchUserData(user.email);
             handleClearInputs();
         } catch (error) {
             console.error('Error saving semester and courses:', error);
@@ -169,7 +215,6 @@ const Dashboard = () => {
         }
     };
 
-    // Handle logout
     const handleLogout = async () => {
         logout();
         navigate("/");
@@ -177,6 +222,17 @@ const Dashboard = () => {
 
     const knowMoreHandler = () => {
         navigate('/semesters', { state: { semesters: semesters } });
+    };
+
+    // Handle clicking on a semester point in SgpaGraph
+    const handleSGPAClick = (index) => {
+        setSelectedSemester(index);
+    };
+
+    // Handle closing the SemesterGraph modal
+    const handleCloseSemesterGraph = () => {
+        setSelectedSemester(null);
+        setBarChartData(null);
     };
 
     return (
@@ -233,29 +289,32 @@ const Dashboard = () => {
                         </div>
                     ))}
 
-                    <button type="button" onClick={handleAddCourse}>Add Another Course</button>
+                    <button type="button" onClick={handleAddCourse}>Add Course</button>
+                    <button type="button" onClick={calculateCGPAWithPressCheck}>Calculate CGPA</button>
+                    <button type="button" onClick={handleClearInputs}>Clear</button>
+                    <button type="button" onClick={handleSaveCGPA} disabled={!isPressed}>Save CGPA</button>
                 </form>
             </section>
 
-            <section className="cgpa-section">
-                <button onClick={calculateCGPAWithPressCheck}>Calculate CGPA</button>
+            {/* Render SgpaGraph */}
+            {semesters.length > 0 && (
+                <section className="sgpa-graph-section">
+                    <h2>SGPA Progression</h2>
+                    <SgpaGraph semesters={semesters} handleSGPAClick={handleSGPAClick} />
+                </section>
+            )}
 
-                {isPressed && (
-                    <div>
-                        <h3>Current Semester SGPA: {finalSgpa}</h3>
-                        <h4>Total CGPA: {finalCgpa}</h4>
-                    </div>
+            {/* Render Semester Graph Modal */}
+            {/* <AnimatePresence>
+                {selectedSemester !== null && barChartData && (
+                    <SemesterGraph barChartData={barChartData} handleClose={handleCloseSemesterGraph} />
                 )}
+            </AnimatePresence> */}
 
-                {isPressed && (
-                    <div className="action-buttons">
-                        <button onClick={handleSaveCGPA}>Save CGPA</button>
-                        <button onClick={handleClearInputs}>Clear</button>
-                    </div>
-                )}
-            </section>
+            <Semesters />
         </div>
     );
+
 };
 
 export default Dashboard;
