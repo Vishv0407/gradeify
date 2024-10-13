@@ -62,6 +62,12 @@ const SgpaGraph = ({ semesters, handleSGPAClick }) => {
                     stepSize: 0.3, // Adjust as needed
                 },
             },
+            x: {
+                ticks: {
+                    autoSkip: true, // Automatically skip labels to avoid clutter
+                    maxTicksLimit: 10, // Limit the number of ticks on the x-axis
+                },
+            },
         },
         onClick: (e, activeElements) => {
             if (activeElements.length > 0) {
@@ -72,7 +78,7 @@ const SgpaGraph = ({ semesters, handleSGPAClick }) => {
     };
 
     return (
-        <div className="sgpa-graph-container" style={{ width: '600px', height: '400px', margin: '0 auto' }}>
+        <div className="sgpa-graph-container" style={{ width: '100%', height: '400px', margin: '0 auto' }}>
             <h3>SGPA Progress</h3>
             <Line data={sgpaData} options={sgpaOptions} />
         </div>

@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { useGoogleLogin } from '@react-oauth/google'; // Import useGoogleLogin hook
+import { useGoogleLogin, GoogleLogin } from '@react-oauth/google'; // Import useGoogleLogin hook
 import { jwtDecode } from "jwt-decode"; // Make sure jwtDecode is imported correctly
 import axios from 'axios'; // or use fetch if you prefer
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
@@ -57,40 +57,24 @@ const MyCustomButton = ({ onClick, children }) => {
 const Welcome = () => {
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate(); // Initialize useNavigate for redirection
-
-  // Use the useGoogleLogin hook to trigger login
-  const login = useGoogleLogin({
-    onSuccess: async (credentialResponse) => {
-      try {
-        console.log('Token Response:', credentialResponse);
-
-        // Check if the credential is present and is a string
-        if (!credentialResponse.credential || typeof credentialResponse.credential !== 'string') {
-          throw new Error("Invalid token received from Google.");
-        }
-
+  
+  const handleLoginSuccess = async (credentialResponse) => {
+    try {
         const decodedData = jwtDecode(credentialResponse.credential);
         console.log(decodedData); // Check what is being decoded
-
         // Send name and email to the backend
         const response = await axios.post(`${backend}/api/auth/user`, {
-          googleId: credentialResponse.credential,
-          name: decodedData.name,
-          email: decodedData.email
+            googleId: credentialResponse.credential,
+            name: decodedData.name,
+            email: decodedData.email
         });
-
         console.log('User saved successfully:', response.data);
         setUser(response.data);
-        navigate('/dashboard'); // Redirect to dashboard after successful login
-
-      } catch (error) {
+        navigate('/dashboard');
+    } catch (error) {
         console.error('Error decoding token or saving user:', error);
-      }
-    },
-    onError: () => {
-      console.log('Login Failed');
     }
-  });
+};
 
   return (
     <div className="min-h-screen bg-[rgb(1,8,21)] text-white flex flex-col items-center justify-center p-4 overflow-hidden relative">
@@ -128,18 +112,12 @@ const Welcome = () => {
           ))}
         </div>
 
-        {/* Custom Button for Google Login with motion effect */}
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0, y: 20 }} // Initial position
-          animate={{ opacity: 1, y: 0 }} // Animate to position
-          transition={{ duration: 0.7, delay: 0.4 }} // Delay to match other animations
-        >
-          <MyCustomButton onClick={login}>
-            <FcGoogle className="mr-2 text-2xl" />
-            Get Started with Google
-          </MyCustomButton>
-        </motion.div>
+        <GoogleLogin
+                onSuccess={handleLoginSuccess}
+                onError={() => {
+                    console.log('Login Failed');
+                }}
+            />
       </main>
     </div>
   );

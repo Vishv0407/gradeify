@@ -16,6 +16,7 @@ export const UserProvider = ({ children }) => {
             return null; // Return null if parsing fails
         }
     });
+
     const [semesters, setSemesters] = useState([]);
 
     // Fetch user data when the component mounts or user changes
@@ -55,7 +56,7 @@ export const UserProvider = ({ children }) => {
     };
 
     return (
-        <UserContext.Provider value={{ user, semesters, setSemesters, fetchUserData, logout }}>
+        <UserContext.Provider value={{ user, semesters, setUser, setSemesters, fetchUserData, logout }}>
             {children}
         </UserContext.Provider>
     );

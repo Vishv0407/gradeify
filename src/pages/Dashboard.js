@@ -7,8 +7,10 @@ import { backend } from '../data';
 import SgpaGraph from '../components/SgpaGraph';
 import SemesterGraph from '../components/SemesterGraph';
 import { motion, AnimatePresence } from 'framer-motion';
-import './dash.css'; // Optional: Add styling as needed
 import Semesters from './Semesters';
+import { XCircle } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
+
 
 const Dashboard = () => {
     const { user, semesters = [], setSemesters, logout } = useContext(UserContext);
@@ -17,9 +19,11 @@ const Dashboard = () => {
     const [finalCgpa, setFinalCgpa] = useState(null);
     const [finalSgpa, setFinalSgpa] = useState(null);
     const [isPressed, setIsPressed] = useState(false);
-    const [selectedSemester, setSelectedSemester] = useState(null); // For SemesterGraph modal
+    const [selectedSemester, setSelectedSemester] = useState(null);
     const [barChartData, setBarChartData] = useState(null);
     const navigate = useNavigate();
+
+    // Keep all existing useEffect hooks and functions
 
     useEffect(() => {
         if (user && user.email) {
@@ -30,6 +34,28 @@ const Dashboard = () => {
     useEffect(() => {
         calculateCGPA();
     }, [courses, semesters]);
+
+    const handleRemoveCourse = (index) => {
+        const updatedCourses = courses.filter((_, i) => i !== index);
+        setCourses(updatedCourses);
+    };
+
+    const areAllInputsFilled = () => {
+        return courses.every(course =>
+            course.courseCode.trim() !== '' &&
+            course.credit.trim() !== '' &&
+            course.cgpa.trim() !== ''
+        );
+    };
+
+    const handleCalculateCGPA = () => {
+        if (areAllInputsFilled()) {
+            calculateCGPAWithPressCheck();
+            toast.success('CGPA calculated successfully!');
+        } else {
+            toast.error('Please fill in all course details before calculating CGPA.');
+        }
+    };
 
     const fetchUserData = async (email) => {
         try {
@@ -206,12 +232,12 @@ const Dashboard = () => {
                 totalGrades: totalGrades
             });
 
-            alert('Semester and courses saved successfully!');
+            toast.success('CGPA saved successfully!');
             fetchUserData(user.email);
             handleClearInputs();
         } catch (error) {
             console.error('Error saving semester and courses:', error);
-            alert('Failed to save semester data');
+            toast.error('Failed to save CGPA. Please try again.');
         }
     };
 
@@ -236,85 +262,171 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="dashboard-container">
-            <header className="dashboard-header">
-                <h1>Welcome, {user ? user.name : 'Guest'}</h1>
-                <button onClick={handleLogout} className="logout-button">Log Out</button>
+        <div className="min-h-screen bg-[rgb(1,8,21)] text-white p-4">
+            <Toaster position="top-right" />
+            <header className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
+                <div>
+                    <h1 className="text-3xl font-bold">Gradeify</h1>
+                    <div className="relative mt-1">
+                        <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-blue-400 blur-sm opacity-50"></div>
+                        <h2 className="relative text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-blue-500">
+                            {user ? user.name : 'Guest'}
+                        </h2>
+                    </div>
+                </div>
+                <button
+                    onClick={handleLogout}
+                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                >
+                    Log Out
+                </button>
             </header>
 
-            {semesters.length > 0 && (
-                <div className="cgpa-info">
-                    <h3>Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
-                    <h4>Previous Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4>
-                </div>
-            )}
-
-            <button onClick={knowMoreHandler}>Know more</button>
-
-            <section className="add-semester">
-                <h2>Add New Semester</h2>
-                <h3>Semester: {semesterNumber}</h3>
-
-                <form>
-                    {courses.map((course, index) => (
-                        <div key={index} className="course-input">
-                            <label>
-                                Course Code:
-                                <input
-                                    type="text"
-                                    value={course.courseCode}
-                                    onChange={(e) => handleCourseChange(index, 'courseCode', e.target.value)}
-                                    required
-                                />
-                            </label>
-                            <label>
-                                Credit:
-                                <input
-                                    type="number"
-                                    value={course.credit}
-                                    onChange={(e) => handleCourseChange(index, 'credit', e.target.value)}
-                                    required
-                                />
-                            </label>
-                            <label>
-                                CGPA:
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    value={course.cgpa}
-                                    onChange={(e) => handleCourseChange(index, 'cgpa', e.target.value)}
-                                    required
-                                />
-                            </label>
-                        </div>
-                    ))}
-
-                    <button type="button" onClick={handleAddCourse}>Add Course</button>
-                    <button type="button" onClick={calculateCGPAWithPressCheck}>Calculate CGPA</button>
-                    <button type="button" onClick={handleClearInputs}>Clear</button>
-                    <button type="button" onClick={handleSaveCGPA} disabled={!isPressed}>Save CGPA</button>
-                </form>
-            </section>
-
-            {/* Render SgpaGraph */}
-            {semesters.length > 0 && (
-                <section className="sgpa-graph-section">
-                    <h2>SGPA Progression</h2>
-                    <SgpaGraph semesters={semesters} handleSGPAClick={handleSGPAClick} />
-                </section>
-            )}
-
-            {/* Render Semester Graph Modal */}
-            {/* <AnimatePresence>
-                {selectedSemester !== null && barChartData && (
-                    <SemesterGraph barChartData={barChartData} handleClose={handleCloseSemesterGraph} />
+            <div className="max-w-6xl mx-auto">
+                {semesters.length > 0 && (
+                    <div className="bg-white/5 p-6 rounded-lg mb-8">
+                        <h3 className="text-xl font-semibold mb-2">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
+                        <h4 className="text-lg">Previous Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4>
+                    </div>
                 )}
-            </AnimatePresence> */}
 
-            <Semesters />
+                {/* <button
+                    onClick={knowMoreHandler}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-8 transition duration-300 ease-in-out"
+                >
+                    Know more
+                </button> */}
+
+                <section className="bg-white/5 p-6 rounded-lg mb-8">
+                    <h2 className="text-2xl font-bold mb-4">Add New Semester</h2>
+                    <h3 className="text-xl mb-4">Semester: {semesterNumber}</h3>
+
+                    <form className="space-y-6">
+                        {courses.map((course, index) => (
+                            <div key={index} className="flex flex-wrap gap-4 items-center">
+                                <label className="flex-1 min-w-[200px]">
+                                    <span className="block mb-1">Course Code:</span>
+                                    <input
+                                        type="text"
+                                        value={course.courseCode}
+                                        onChange={(e) => handleCourseChange(index, 'courseCode', e.target.value)}
+                                        className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </label>
+                                <label className="flex-1 min-w-[200px]">
+                                    <span className="block mb-1">Credit:</span>
+                                    <input
+                                        type="number"
+                                        value={course.credit}
+                                        onChange={(e) => handleCourseChange(index, 'credit', e.target.value)}
+                                        className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </label>
+                                <label className="flex-1 min-w-[200px]">
+                                    <span className="block mb-1">CGPA:</span>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={course.cgpa}
+                                        onChange={(e) => handleCourseChange(index, 'cgpa', e.target.value)}
+                                        className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </label>
+                                {courses.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveCourse(index)}
+                                        className="mt-6 text-red-500 hover:text-red-600 transition duration-300 ease-in-out"
+                                    >
+                                        <XCircle size={24} />
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+
+                        <div className="flex flex-wrap gap-4">
+                            <button
+                                type="button"
+                                onClick={handleAddCourse}
+                                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                            >
+                                Add Course
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCalculateCGPA}
+                                className={`text-white px-4 py-2 rounded transition duration-300 ease-in-out ${areAllInputsFilled()
+                                        ? 'bg-yellow-500 hover:bg-yellow-600'
+                                        : 'bg-gray-500 cursor-not-allowed'
+                                    }`}
+                                disabled={!areAllInputsFilled()}
+                            >
+                                Calculate CGPA
+                            </button>
+                            {courses.some(course => course.courseCode || course.credit || course.cgpa) && (
+                                <button
+                                    type="button"
+                                    onClick={handleClearInputs}
+                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                                >
+                                    Clear Inputs
+                                </button>
+                            )}
+                        </div>
+                    </form>
+                </section>
+
+                {finalCgpa && finalSgpa && (
+                    <div className="bg-white/5 p-6 rounded-lg mb-8">
+                        <h3 className="text-xl font-bold mb-2">Final CGPA: {finalCgpa}</h3>
+                        <h4 className="text-lg">SGPA for this semester: {finalSgpa}</h4>
+                        <button
+                            onClick={handleSaveCGPA}
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out mt-4"
+                        >
+                            Save CGPA
+                        </button>
+                    </div>
+                )}
+
+                {/* SGPA Graph */}
+                {semesters.length > 0 && (
+                    <div className="bg-white/5 p-6 rounded-lg mb-8">
+                        <h3 className="text-xl font-bold mb-4">SGPA Over Semesters</h3>
+                        <SgpaGraph semesters={semesters} handleSGPAClick={handleSGPAClick} />
+                    </div>
+                )}
+
+                {/* Semester Graph modal */}
+                <AnimatePresence>
+                    {selectedSemester !== null && barChartData && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -50 }}
+                            className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50"
+                        >
+                            <div className="bg-white p-8 rounded-lg max-w-lg w-full relative">
+                                <button
+                                    onClick={handleCloseSemesterGraph}
+                                    className="absolute top-2 right-2 text-red-500 hover:text-red-600 transition duration-300 ease-in-out"
+                                >
+                                    <XCircle size={32} />
+                                </button>
+                                <h3 className="text-xl font-bold mb-4">Semester {selectedSemester + 1} - Course CGPA</h3>
+                                <SemesterGraph data={barChartData} />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                <Semesters />
+            </div>
         </div>
     );
-
 };
 
 export default Dashboard;
