@@ -1,4 +1,3 @@
-// src/pages/Dashboard.js
 import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -8,9 +7,8 @@ import SgpaGraph from '../components/SgpaGraph';
 import SemesterGraph from '../components/SemesterGraph';
 import { motion, AnimatePresence } from 'framer-motion';
 import Semesters from './Semesters';
-import { XCircle } from 'lucide-react';
+import { XCircle, Plus } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
-
 
 const Dashboard = () => {
     const { user, semesters = [], setSemesters, logout } = useContext(UserContext);
@@ -23,7 +21,6 @@ const Dashboard = () => {
     const [barChartData, setBarChartData] = useState(null);
     const navigate = useNavigate();
 
-    // Keep all existing useEffect hooks and functions
 
     useEffect(() => {
         if (user && user.email) {
@@ -34,11 +31,6 @@ const Dashboard = () => {
     useEffect(() => {
         calculateCGPA();
     }, [courses, semesters]);
-
-    const handleRemoveCourse = (index) => {
-        const updatedCourses = courses.filter((_, i) => i !== index);
-        setCourses(updatedCourses);
-    };
 
     const areAllInputsFilled = () => {
         return courses.every(course =>
@@ -192,6 +184,11 @@ const Dashboard = () => {
         setCourses([...courses, { courseCode: '', credit: '', cgpa: '' }]);
     };
 
+    const handleRemoveCourse = (index) => {
+        const updatedCourses = courses.filter((_, i) => i !== index);
+        setCourses(updatedCourses);
+    };
+
     const handleClearInputs = () => {
         setCourses([{ courseCode: '', credit: '', cgpa: '' }]);
         setFinalCgpa(null);
@@ -286,16 +283,9 @@ const Dashboard = () => {
                 {semesters.length > 0 && (
                     <div className="bg-white/5 p-6 rounded-lg mb-8">
                         <h3 className="text-xl font-semibold mb-2">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
-                        <h4 className="text-lg">Previous Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4>
+                        <h4 className="text-lg">Previous {semesters.length} Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4>
                     </div>
                 )}
-
-                {/* <button
-                    onClick={knowMoreHandler}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-8 transition duration-300 ease-in-out"
-                >
-                    Know more
-                </button> */}
 
                 <section className="bg-white/5 p-6 rounded-lg mb-8">
                     <h2 className="text-2xl font-bold mb-4">Add New Semester</h2>
@@ -303,68 +293,60 @@ const Dashboard = () => {
 
                     <form className="space-y-6">
                         {courses.map((course, index) => (
-                            <div key={index} className="flex flex-wrap gap-4 items-center">
-                                <label className="flex-1 min-w-[200px]">
-                                    <span className="block mb-1">Course Code:</span>
-                                    <input
-                                        type="text"
-                                        value={course.courseCode}
-                                        onChange={(e) => handleCourseChange(index, 'courseCode', e.target.value)}
-                                        className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </label>
-                                <label className="flex-1 min-w-[200px]">
-                                    <span className="block mb-1">Credit:</span>
-                                    <input
-                                        type="number"
-                                        value={course.credit}
-                                        onChange={(e) => handleCourseChange(index, 'credit', e.target.value)}
-                                        className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </label>
-                                <label className="flex-1 min-w-[200px]">
-                                    <span className="block mb-1">CGPA:</span>
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        value={course.cgpa}
-                                        onChange={(e) => handleCourseChange(index, 'cgpa', e.target.value)}
-                                        className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </label>
-                                {courses.length > 1 && (
+                            <div key={index} className="relative bg-white/10 p-6 rounded-lg mt-8">
+                                {courses.length > 1 && ( // Only show button if there is more than one course
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveCourse(index)}
-                                        className="mt-6 text-red-500 hover:text-red-600 transition duration-300 ease-in-out"
+                                        className="absolute -top-3 -right-3 text-red-500 hover:text-red-600 transition duration-300 ease-in-out bg-[rgb(1,8,21)] rounded-full p-1 z-10"
                                     >
                                         <XCircle size={24} />
                                     </button>
                                 )}
+                                <div className="flex flex-wrap gap-4">
+                                    <label className="flex-1 min-w-[200px]">
+                                        <span className="block mb-1">Course Code:</span>
+                                        <input
+                                            type="text"
+                                            value={course.courseCode}
+                                            onChange={(e) => handleCourseChange(index, 'courseCode', e.target.value)}
+                                            className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </label>
+                                    <label className="flex-1 min-w-[200px]">
+                                        <span className="block mb-1">Credit:</span>
+                                        <input
+                                            type="number"
+                                            value={course.credit}
+                                            onChange={(e) => handleCourseChange(index, 'credit', e.target.value)}
+                                            className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </label>
+                                    <label className="flex-1 min-w-[200px]">
+                                        <span className="block mb-1">CGPA:</span>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={course.cgpa}
+                                            onChange={(e) => handleCourseChange(index, 'cgpa', e.target.value)}
+                                            className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                    </label>
+                                </div>
                             </div>
                         ))}
+
 
                         <div className="flex flex-wrap gap-4">
                             <button
                                 type="button"
                                 onClick={handleAddCourse}
-                                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out flex items-center"
                             >
-                                Add Course
-                            </button>
-                            <button
-                                type="button"
-                                onClick={handleCalculateCGPA}
-                                className={`text-white px-4 py-2 rounded transition duration-300 ease-in-out ${areAllInputsFilled()
-                                        ? 'bg-yellow-500 hover:bg-yellow-600'
-                                        : 'bg-gray-500 cursor-not-allowed'
-                                    }`}
-                                disabled={!areAllInputsFilled()}
-                            >
-                                Calculate CGPA
+                                <Plus size={20} className="mr-2" /> Add Course
                             </button>
                             {courses.some(course => course.courseCode || course.credit || course.cgpa) && (
                                 <button
@@ -379,18 +361,24 @@ const Dashboard = () => {
                     </form>
                 </section>
 
-                {finalCgpa && finalSgpa && (
-                    <div className="bg-white/5 p-6 rounded-lg mb-8">
-                        <h3 className="text-xl font-bold mb-2">Final CGPA: {finalCgpa}</h3>
-                        <h4 className="text-lg">SGPA for this semester: {finalSgpa}</h4>
+                {courses.some(course => course.courseCode && course.credit && course.cgpa) && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="bg-gradient-to-r from-blue-500 to-purple-500 p-6 rounded-lg mb-8 shadow-lg"
+                    >
+                        <h3 className="text-2xl font-bold mb-2">Final CGPA: {finalCgpa}</h3>
+                        <h4 className="text-xl">SGPA for this semester: {finalSgpa}</h4>
                         <button
                             onClick={handleSaveCGPA}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out mt-4"
+                            className="bg-white text-blue-500 hover:bg-blue-100 px-4 py-2 rounded transition duration-300 ease-in-out mt-4 font-semibold"
                         >
                             Save CGPA
                         </button>
-                    </div>
+                    </motion.div>
                 )}
+
 
                 {/* SGPA Graph */}
                 {semesters.length > 0 && (
@@ -400,7 +388,6 @@ const Dashboard = () => {
                     </div>
                 )}
 
-                {/* Semester Graph modal */}
                 <AnimatePresence>
                     {selectedSemester !== null && barChartData && (
                         <motion.div

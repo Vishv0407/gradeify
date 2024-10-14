@@ -25,7 +25,7 @@ ChartJS.register(
 const SgpaGraph = ({ semesters, handleSGPAClick }) => {
     // Prepare data for the Line chart
     const sgpaData = {
-        labels: semesters.map((_, index) => `Semester ${index + 1}`),
+        labels: [...semesters.map((_, index) => `Semester ${index + 1}`), `Semester ${semesters.length}`],
         datasets: [
             {
                 label: 'SGPA',
@@ -52,7 +52,9 @@ const SgpaGraph = ({ semesters, handleSGPAClick }) => {
                 position: 'top',
             },
             tooltip: {
-                enabled: true,
+                callbacks: {
+                    label: (context) => `CGPA: ${context.raw.toFixed(2)}`,
+                },
             },
         },
         scales: {
