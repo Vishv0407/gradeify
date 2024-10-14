@@ -19,10 +19,10 @@ const courseSchema = new mongoose.Schema({
       required: true
     },
     semesterId: {
-      // type: mongoose.Schema.Types.ObjectId,
-      // ref: 'Semester',
-      // required: true
-      type: Number,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Semester',
+      required: true
+      // type: Number,
     }
   });
   

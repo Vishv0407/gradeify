@@ -12,7 +12,7 @@ import { toast } from 'react-hot-toast';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const Semesters = () => {
-    const { semesters, setSemesters } = useContext(UserContext);
+    const { semesters } = useContext(UserContext);
     const [isMobile, setMobile] = useState(window.innerWidth < 768);
     const [editingIndex, setEditingIndex] = useState(null);
     const [updatedCourses, setUpdatedCourses] = useState([]);
@@ -134,8 +134,6 @@ const Semesters = () => {
                 sgpa: parseFloat(newSGPA.toFixed(2)),
                 courses: updatedCourses,
             };
-
-            setSemesters(updatedSemesters); // Update the semesters state immediately with the new data
             setEditingIndex(null); // Exit editing mode
             toast.success('Semester updated successfully');
         } catch (error) {

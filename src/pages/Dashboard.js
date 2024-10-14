@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Semesters from './Semesters';
 import { XCircle, Plus } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
+import { HyperText } from '../components/HyperText';
 
 const Dashboard = () => {
     const { user, semesters = [], setSemesters, logout } = useContext(UserContext);
@@ -200,35 +201,47 @@ const Dashboard = () => {
 
     const handleSaveCGPA = async () => {
         try {
+            // Calculate total credits and grades for the semester
             let totalCredits = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
                 return acc + (isNaN(credit) ? 0 : credit);
             }, 0);
-
+    
             let totalGrades = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
                 const cgpa = parseFloat(course.cgpa);
                 return acc + (isNaN(credit) || isNaN(cgpa) ? 0 : credit * cgpa);
             }, 0);
-
-            // Add courses first
+    
+            // First, create the semester to get its ObjectId
+            const semesterResponse = await axios.post(`${backend}/api/semester/addSemester`, {
+                userId: user._id,
+                semesterNumber,
+                sgpa: finalSgpa,  // You can provide a default or calculated value here
+                totalCredits: 0,   // Initially set total credits to 0
+                totalGrades: 0,    // Initially set total grades to 0
+                courses: []        // Initially empty
+            });
+    
+            const semesterId = semesterResponse.data._id;
+    
+            // Now add the courses and associate them with the semester
             const courseResponse = await axios.post(`${backend}/api/course/addCourses`, {
                 courses,
                 userId: user._id,
-                semesterId: semesterNumber
+                semesterId: semesterId // Associate the courses with the newly created semester
             });
-
+    
             const courseIds = courseResponse.data.map(course => course._id);
-
-            await axios.post(`${backend}/api/semester/addSemester`, {
-                userId: user._id,
-                semesterNumber,
-                sgpa: finalSgpa,
-                courses: courseIds,
+    
+            // Update the semester with actual course IDs, total credits, and total grades
+            await axios.put(`${backend}/api/semester/updateSemester`, {
+                semesterId,          // Update this specific semester
                 totalCredits: totalCredits,
-                totalGrades: totalGrades
+                totalGrades: totalGrades,
+                courses: courseIds,   // Update with the actual course IDs
             });
-
+    
             toast.success('CGPA saved successfully!');
             fetchUserData(user.email);
             handleClearInputs();
@@ -237,6 +250,7 @@ const Dashboard = () => {
             toast.error('Failed to save CGPA. Please try again.');
         }
     };
+    
 
     const handleLogout = async () => {
         logout();
@@ -264,12 +278,6 @@ const Dashboard = () => {
             <header className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
                 <div>
                     <h1 className="text-3xl font-bold">Gradeify</h1>
-                    <div className="relative mt-1">
-                        <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-blue-400 blur-sm opacity-50"></div>
-                        <h2 className="relative text-xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-blue-500">
-                            {user ? user.name : 'Guest'}
-                        </h2>
-                    </div>
                 </div>
                 <button
                     onClick={handleLogout}
@@ -279,7 +287,17 @@ const Dashboard = () => {
                 </button>
             </header>
 
-            <div className="max-w-6xl mx-auto">
+            
+
+            <div className="max-w-6xl mx-auto px-4 lg:px-0">
+
+                    <HyperText
+                         text={`Welcome, ${user.name}`}
+                        duration={1000} // Optional: Adjust the animation duration
+                        className=" text-xl md:text-2xl font-bold my-4" // Optional: Custom class names
+                        animateOnLoad={true} // Optional: If you want the animation to trigger on load
+                    />
+
                 {semesters.length > 0 && (
                     <div className="bg-white/5 p-6 rounded-lg mb-8">
                         <h3 className="text-xl font-semibold mb-2">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>

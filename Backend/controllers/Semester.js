@@ -46,29 +46,32 @@ exports.addSemesterWithCourses = async (req, res) => {
   }
 };
 
-// Update Semester
 exports.updateSemester = async (req, res) => {
   try {
-      const { semesterId } = req.params; // Get the semesterId from URL parameters
-      const { semesterNumber, sgpa, courses, totalCredits, totalGrades } = req.body;
+      const { semesterId, totalCredits, sgpa, totalGrades, courses } = req.body;
 
-      // Find the semester by ID and update it
+      // Find the semester by its ID and update its details
       const updatedSemester = await Semester.findByIdAndUpdate(
           semesterId,
-          { semesterNumber, sgpa, courses, totalCredits, totalGrades },
-          { new: true } // Return the updated document
+          {
+              sgpa,
+              totalCredits,
+              totalGrades,
+              courses, // Assuming courses is an array of course ObjectIds
+          },
+          { new: true } // Return the updated semester after modification
       );
 
       if (!updatedSemester) {
           return res.status(404).json({ message: 'Semester not found' });
       }
 
-      res.json(updatedSemester); // Respond with the updated semester data
+      return res.status(200).json(updatedSemester);
   } catch (error) {
-      res.status(500).json({ message: error.message });
+      console.error('Error updating semester:', error);
+      return res.status(500).json({ message: 'Failed to update semester' });
   }
 };
-
 
 // Delete Semester
 exports.deleteSemester = async (req, res) => {

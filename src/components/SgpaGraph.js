@@ -1,5 +1,4 @@
-// src/components/SgpaGraph.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -23,9 +22,26 @@ ChartJS.register(
 );
 
 const SgpaGraph = ({ semesters, handleSGPAClick }) => {
+    const [isMobile, setMobile] = useState(false);
+
+    // Manage responsiveness for mobile
+    useEffect(() => {
+        const handleResize = () => {
+            setMobile(window.innerWidth < 768); // Check for mobile screens
+        };
+
+        // Set the initial screen size
+        handleResize();
+        
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
     // Prepare data for the Line chart
     const sgpaData = {
-        labels: [...semesters.map((_, index) => `Semester ${index + 1}`), `Semester ${semesters.length}`],
+        labels: semesters.map((sem, index) => `Sem ${index + 1}`),
         datasets: [
             {
                 label: 'SGPA',
@@ -53,7 +69,7 @@ const SgpaGraph = ({ semesters, handleSGPAClick }) => {
             },
             tooltip: {
                 callbacks: {
-                    label: (context) => `CGPA: ${context.raw.toFixed(2)}`,
+                    label: (context) => `SGPA: ${context.raw.toFixed(2)}`,
                 },
             },
         },
@@ -66,8 +82,19 @@ const SgpaGraph = ({ semesters, handleSGPAClick }) => {
             },
             x: {
                 ticks: {
-                    autoSkip: true, // Automatically skip labels to avoid clutter
-                    maxTicksLimit: 10, // Limit the number of ticks on the x-axis
+                    autoSkip: false, // Ensure all labels are shown
+                    callback: function (value, index, values) {
+                        const sgpa = semesters[index].sgpa || 0;
+
+                        // Display SGPA vertically on mobile, otherwise keep it normal
+                        if (isMobile) {
+                            return `Sem ${index + 1} SGPA: ${sgpa.toFixed(2)}`;
+                        } else {
+                            return [`Sem ${index + 1}`, `SGPA: ${sgpa.toFixed(2)}`];
+                        }
+                    },
+                    maxRotation: isMobile ? 90 : 0,
+                    minRotation: isMobile ? 90 : 0,
                 },
             },
         },
