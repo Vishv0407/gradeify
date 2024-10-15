@@ -58,9 +58,6 @@ exports.addSingleCourse = async (req, res) => {
   }
 };
 
-
-
-
 // Update Course
   // Backend controller function to update course
 exports.updateCourse = async (req, res) => {

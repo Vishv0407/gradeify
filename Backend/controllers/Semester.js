@@ -14,8 +14,6 @@ exports.addSemesterWithCourses = async (req, res) => {
     // const savedCourses = await Course.insertMany(courses.map(course => ({ ...course, userId })));
 
     // Get the course ids to link them with the semester
-    // const courseIds = courses.map(course => course._id);
-    console.log(courses);
 
     // Create a new semester
     const newSemester = new Semester({
@@ -76,21 +74,40 @@ exports.updateSemester = async (req, res) => {
 // Delete Semester
 exports.deleteSemester = async (req, res) => {
   try {
-    const { semesterId } = req.params;
+    // const { semesterId } = req.params;
+    const { userId, semesterId } = req.body;
+    console.log(userId);
 
-    const deletedSemester = await Semester.findByIdAndDelete(semesterId);
+    // Find the semester to retrieve the course IDs
+    const semesterToDelete = await Semester.findById(semesterId).populate('courses');
 
-    if (!deletedSemester) {
+    if (!semesterToDelete) {
       return res.status(404).json({ message: 'Semester not found' });
     }
 
+    // Delete all courses associated with the semester
+    await Course.deleteMany({ _id: { $in: semesterToDelete.courses } });
+
     // Remove semester reference from user's semesters array
-    await User.findByIdAndUpdate(deletedSemester.user, {
+    const userUpdateResult = await User.findByIdAndUpdate(userId, {
       $pull: { semesters: semesterId }
     });
 
-    res.json({ message: 'Semester deleted successfully' });
+    // Check if the user was found and updated
+    if (!userUpdateResult) {
+      console.error('User not found or update failed');
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Now delete the semester
+    await Semester.findByIdAndDelete(semesterId);
+
+    res.status(204).json(); // No content response for successful delete
   } catch (error) {
+    console.error('Error deleting semester:', error);
     res.status(500).json({ message: error.message });
   }
 };
+
+
+

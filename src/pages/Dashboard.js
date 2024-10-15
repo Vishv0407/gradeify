@@ -10,6 +10,8 @@ import Semesters from './Semesters';
 import { XCircle, Plus } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 import { HyperText } from '../components/HyperText';
+import CoolButton from '../components/CoolButton';
+import logo from '../assets/logo.png';
 
 const Dashboard = () => {
     const { user, semesters = [], setSemesters, logout } = useContext(UserContext);
@@ -20,6 +22,7 @@ const Dashboard = () => {
     const [isPressed, setIsPressed] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState(null);
     const [barChartData, setBarChartData] = useState(null);
+    const [isConfirmLogoutOpen, setIsConfirmLogoutOpen] = useState(false);
     const navigate = useNavigate();
 
 
@@ -32,23 +35,6 @@ const Dashboard = () => {
     useEffect(() => {
         calculateCGPA();
     }, [courses, semesters]);
-
-    const areAllInputsFilled = () => {
-        return courses.every(course =>
-            course.courseCode.trim() !== '' &&
-            course.credit.trim() !== '' &&
-            course.cgpa.trim() !== ''
-        );
-    };
-
-    const handleCalculateCGPA = () => {
-        if (areAllInputsFilled()) {
-            calculateCGPAWithPressCheck();
-            toast.success('CGPA calculated successfully!');
-        } else {
-            toast.error('Please fill in all course details before calculating CGPA.');
-        }
-    };
 
     const fetchUserData = async (email) => {
         try {
@@ -103,30 +89,6 @@ const Dashboard = () => {
         setFinalCgpa(cgpa.toFixed(2));
         setFinalSgpa(currentSGPA.toFixed(2));
 
-        // Prepare data for SgpaGraph
-        // (Assuming you want to show SGPA over all semesters, including the current one)
-        const sgpaGraphData = {
-            labels: [...semesters.map((_, index) => `Semester ${index + 1}`), `Semester ${semesterNumber}`],
-            datasets: [
-                {
-                    label: 'SGPA',
-                    data: [...semesters.map(sem => parseFloat(sem.sgpa) || 0), parseFloat(currentSGPA) || 0],
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(255, 99, 132, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(255, 99, 132, 1)',
-                    tension: 0.4, // Smooth curves
-                },
-            ],
-        };
-
-        // Update SgpaGraph data
-        // Assuming SgpaGraph component can accept data as prop directly
-        // Otherwise, manage it via state and pass as a prop
-
         // Prepare data for Semester Graph
         if (selectedSemester !== null) {
             const semester = semesters[selectedSemester];
@@ -146,26 +108,6 @@ const Dashboard = () => {
         } else {
             setBarChartData(null);
         }
-    };
-
-    const checkInputsAndSetPress = () => {
-        const areInputsValid = courses.every(course =>
-            course.courseCode !== '' &&
-            !isNaN(parseFloat(course.credit)) &&
-            !isNaN(parseFloat(course.cgpa))
-        );
-
-        if (areInputsValid) {
-            setIsPressed(true);
-        } else {
-            alert('Please fill in all the course fields correctly.');
-            setIsPressed(false);
-        }
-    };
-
-    const calculateCGPAWithPressCheck = () => {
-        checkInputsAndSetPress();
-        calculateCGPA();
     };
 
     const handleCourseChange = (index, field, value) => {
@@ -206,13 +148,13 @@ const Dashboard = () => {
                 const credit = parseFloat(course.credit);
                 return acc + (isNaN(credit) ? 0 : credit);
             }, 0);
-    
+
             let totalGrades = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
                 const cgpa = parseFloat(course.cgpa);
                 return acc + (isNaN(credit) || isNaN(cgpa) ? 0 : credit * cgpa);
             }, 0);
-    
+
             // First, create the semester to get its ObjectId
             const semesterResponse = await axios.post(`${backend}/api/semester/addSemester`, {
                 userId: user._id,
@@ -222,18 +164,18 @@ const Dashboard = () => {
                 totalGrades: 0,    // Initially set total grades to 0
                 courses: []        // Initially empty
             });
-    
+
             const semesterId = semesterResponse.data._id;
-    
+
             // Now add the courses and associate them with the semester
             const courseResponse = await axios.post(`${backend}/api/course/addCourses`, {
                 courses,
                 userId: user._id,
                 semesterId: semesterId // Associate the courses with the newly created semester
             });
-    
+
             const courseIds = courseResponse.data.map(course => course._id);
-    
+
             // Update the semester with actual course IDs, total credits, and total grades
             await axios.put(`${backend}/api/semester/updateSemester`, {
                 semesterId,          // Update this specific semester
@@ -241,7 +183,7 @@ const Dashboard = () => {
                 totalGrades: totalGrades,
                 courses: courseIds,   // Update with the actual course IDs
             });
-    
+
             toast.success('CGPA saved successfully!');
             fetchUserData(user.email);
             handleClearInputs();
@@ -250,15 +192,9 @@ const Dashboard = () => {
             toast.error('Failed to save CGPA. Please try again.');
         }
     };
-    
 
-    const handleLogout = async () => {
-        logout();
-        navigate("/");
-    };
-
-    const knowMoreHandler = () => {
-        navigate('/semesters', { state: { semesters: semesters } });
+    const handleLogout = () => {
+        setIsConfirmLogoutOpen(true);
     };
 
     // Handle clicking on a semester point in SgpaGraph
@@ -275,28 +211,31 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen bg-[rgb(1,8,21)] text-white p-4">
             <Toaster position="top-right" />
-            <header className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
-                <div>
-                    <h1 className="text-3xl font-bold">Gradeify</h1>
+            <header className=" w-full border-b border-white/10 pb-4 mb-6">
+                <div className='w-[90%] m-auto flex justify-between items-center'>
+                    <div className='flex flex-row gap-2 items-center'>
+                        <img src={logo} className='w-[28px] h-[28px] rounded-md'></img>
+                        <h1 className="text-3xl font-bold">Gradeify</h1>
+                    </div>
+                    <button
+                        onClick={handleLogout}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                    >
+                        Log Out
+                    </button>
                 </div>
-                <button
-                    onClick={handleLogout}
-                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
-                >
-                    Log Out
-                </button>
             </header>
 
-            
+
 
             <div className="max-w-6xl mx-auto px-4 lg:px-0">
 
-                    <HyperText
-                         text={`Welcome, ${user.name}`}
-                        duration={1000} // Optional: Adjust the animation duration
-                        className=" text-xl md:text-2xl font-bold my-4" // Optional: Custom class names
-                        animateOnLoad={true} // Optional: If you want the animation to trigger on load
-                    />
+                <HyperText
+                    text={`Welcome, ${user.name}`}
+                    duration={1000} // Optional: Adjust the animation duration
+                    className=" text-xl md:text-2xl font-bold my-4" // Optional: Custom class names
+                    animateOnLoad={true} // Optional: If you want the animation to trigger on load
+                />
 
                 {semesters.length > 0 && (
                     <div className="bg-white/5 p-6 rounded-lg mb-8">
@@ -328,7 +267,7 @@ const Dashboard = () => {
                                             type="text"
                                             value={course.courseCode}
                                             onChange={(e) => handleCourseChange(index, 'courseCode', e.target.value)}
-                                            className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="input-shadow w-full bg-white/10 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                                             required
                                         />
                                     </label>
@@ -336,9 +275,10 @@ const Dashboard = () => {
                                         <span className="block mb-1">Credit:</span>
                                         <input
                                             type="number"
+                                            min={0}
                                             value={course.credit}
                                             onChange={(e) => handleCourseChange(index, 'credit', e.target.value)}
-                                            className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="input-shadow w-full bg-white/10 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                                             required
                                         />
                                     </label>
@@ -347,9 +287,10 @@ const Dashboard = () => {
                                         <input
                                             type="number"
                                             step="0.01"
+                                            min={0}
                                             value={course.cgpa}
                                             onChange={(e) => handleCourseChange(index, 'cgpa', e.target.value)}
-                                            className="w-full bg-white/10 border border-white/30 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="input-shadow w-full bg-white/10 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                                             required
                                         />
                                     </label>
@@ -428,7 +369,57 @@ const Dashboard = () => {
                     )}
                 </AnimatePresence>
 
-                <Semesters />
+                {semesters.length > 0 ? (
+                    <Semesters />
+                ) : (
+                    <div></div>
+                )}
+
+                <div className="flex justify-center items-center">
+                    <CoolButton options={{ size: 25, particle: "circle" }}>
+                        <button className="border border-white px-4 py-2 text-lg rounded-2xl">
+                            Click me to celebrate!
+                        </button>
+                    </CoolButton>
+                </div>
+
+                <AnimatePresence>
+                    {isConfirmLogoutOpen && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="bg-[rgb(1,8,21)] p-6 rounded-lg w-full max-w-sm border-[#424242] border-[1px]"
+                            >
+                                <h2 className="text-lg font-bold mb-4">Confirm Logout</h2>
+                                <p>Are you sure you want to log out?</p>
+                                <div className="flex justify-between mt-6">
+                                    <button
+                                        onClick={() => {
+                                            logout();
+                                            navigate("/");
+                                        }}
+                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                    >
+                                        Log Out
+                                    </button>
+                                    <button
+                                        onClick={() => setIsConfirmLogoutOpen(false)}
+                                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

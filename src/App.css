@@ -4,11 +4,14 @@
 
 .App {
   text-align: center;
+  margin: 0;
+  padding: 0;
 }
 
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+  background-color: #424242;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -67,4 +70,20 @@ body::-webkit-scrollbar-thumb {
     scrollbar-color: var(--sb-thumb-color)
                      var(--sb-track-color);
   }
+}
+
+.input-shadow{
+  box-shadow: rgba(255, 255, 255, 0.18) 0px -2px 0px inset;
+}
+
+/* Hide arrows in Chrome, Safari, and Edge */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Hide arrows in Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
 }

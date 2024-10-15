@@ -5,21 +5,20 @@ import { backend } from '../data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, Edit2, Trash2, X } from 'lucide-react';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { toast } from 'react-hot-toast';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
-
 const Semesters = () => {
-    const { semesters, setSemesters } = useContext(UserContext);
+    const { user, semesters, setSemesters } = useContext(UserContext);
     const [isMobile, setMobile] = useState(window.innerWidth < 768);
     const [editingIndex, setEditingIndex] = useState(null);
     const [updatedCourses, setUpdatedCourses] = useState([]);
     const [dropdowns, setDropdowns] = useState({});
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [semesterToDelete, setSemesterToDelete] = useState(null);
+    const [hasChanges, setHasChanges] = useState(false); // Track changes
 
-    // Effect for handling window resize
     useEffect(() => {
         const handleResize = () => {
             setMobile(window.innerWidth < 768);
@@ -34,22 +33,22 @@ const Semesters = () => {
 
     useEffect(() => {
         if (isModalOpen) {
-            // Prevent background scrolling
             document.body.style.overflow = 'hidden';
         } else {
-            // Reset overflow
             document.body.style.overflow = 'auto';
         }
 
-        // Cleanup function to ensure overflow is reset
         return () => {
             document.body.style.overflow = 'auto';
         };
     }, [isModalOpen]);
 
-    if (!semesters || semesters.length === 0) {
-        return <div className="text-white">No semester data available.</div>;
-    }
+    useEffect(() => {
+        // Reset changes when modal is closed
+        if (!isModalOpen) {
+            setHasChanges(false);
+        }
+    }, [isModalOpen]);
 
     const handleEdit = (index) => {
         setEditingIndex(index);
@@ -61,16 +60,21 @@ const Semesters = () => {
         const updatedCoursesCopy = [...updatedCourses];
         updatedCoursesCopy[index][field] = value;
         setUpdatedCourses(updatedCoursesCopy);
+        setHasChanges(true); // Mark changes as made
     };
 
     const handleAddCourse = () => {
         setUpdatedCourses((prev) => [...prev, { courseCode: '', cgpa: '', credit: '', _id: null }]);
+        setHasChanges(true); // Mark changes as made
     };
 
     const handleRemoveCourse = (index) => {
-        const updatedCoursesCopy = [...updatedCourses];
-        updatedCoursesCopy.splice(index, 1);
-        setUpdatedCourses(updatedCoursesCopy);
+        if (updatedCourses.length > 1) {
+            const updatedCoursesCopy = [...updatedCourses];
+            updatedCoursesCopy.splice(index, 1);
+            setUpdatedCourses(updatedCoursesCopy);
+            setHasChanges(true); // Mark changes as made
+        }
     };
 
     const updateCourse = async (courseId, course) => {
@@ -80,7 +84,7 @@ const Semesters = () => {
                 credit: course.credit,
                 cgpa: parseFloat(course.cgpa),
             });
-            toast.success('Course updated successfully');
+            // toast.success('Course updated successfully');
         } catch (error) {
             console.error('Error updating course:', error);
             toast.error('Failed to update course');
@@ -137,11 +141,44 @@ const Semesters = () => {
 
             setSemesters(updatedSemesters); // Update the semesters state immediately with the new data
             setEditingIndex(null); // Exit editing mode
+            setIsModalOpen(false);
             toast.success('Semester updated successfully');
+
+            console.log(updatedCourses);
         } catch (error) {
             console.error('Error updating semester:', error);
             toast.error('Failed to update semester');
         }
+        setHasChanges(false);
+    };
+
+    const deleteSemester = async (semesterId) => {
+        try {
+            await axios.delete(`${backend}/api/semester/deleteSemester`, {
+                data: { // Pass the data here
+                    userId: user._id,
+                    semesterId: semesterId
+                }
+            });
+            setSemesters((prev) => prev.filter((_, index) => index !== semesterToDelete));
+            toast.success('Semester deleted successfully');
+        } catch (error) {
+            console.error('Error deleting semester:', error);
+            toast.error('Failed to delete semester');
+        } finally {
+            setIsConfirmDeleteOpen(false);
+            setSemesterToDelete(null);
+        }
+    };
+
+    const handleConfirmDelete = (index) => {
+        setIsConfirmDeleteOpen(true);
+        setSemesterToDelete(index);
+    };
+
+    const cancelDelete = () => {
+        setIsConfirmDeleteOpen(false);
+        setSemesterToDelete(null);
     };
 
     const calculateCGPA = () => {
@@ -203,9 +240,8 @@ const Semesters = () => {
     };
 
     return (
-        <div className="bg-[rgb(1,8,21)] text-white p-6 rounded-lg shadow-lg">
+        <div className="bg-[rgb(1,8,21)] text-white p-4 rounded-lg shadow-lg">
             <h1 className="text-2xl md:text-3xl font-bold mb-6">Semesters Information</h1>
-            <p className="text-xl mb-8">Total CGPA: {calculateCGPA().toFixed(2)}</p>
 
             {semesters.map((semester, index) => (
                 <div key={index} className="mb-8 border-b border-gray-700 pb-6">
@@ -232,6 +268,7 @@ const Semesters = () => {
                                                 <span className="font-medium">{course.courseCode}</span>
                                                 <span>CGPA: {course.cgpa}</span>
                                                 <span>Credit: {course.credit}</span>
+                                                
                                             </div>
                                         </div>
                                     ))}
@@ -254,22 +291,31 @@ const Semesters = () => {
                                     />
                                 </div>
                                 <p className="text-center">SGPA: {semester.sgpa}</p>
+
+                                {/* Edit and Delete Buttons */}
+                                <div className="flex justify-end space-x-2 mt-4 gap-2">
+                                    <button
+                                        onClick={() => handleEdit(index)}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    >
+                                        Edit
+                                    </button>
+                                    {index === semesters.length - 1 && (
+                                        <button
+                                            onClick={() => handleConfirmDelete(index)}
+                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                        >
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
-
-                    {/* Move the Edit button to the end */}
-                    <div className="flex justify-end">
-                        <button
-                            onClick={() => handleEdit(index)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        >
-                            Edit Semester
-                        </button>
-                    </div>
                 </div>
             ))}
 
+            {/* Modal for Editing Semester */}
             <AnimatePresence>
                 {isModalOpen && (
                     <motion.div
@@ -319,13 +365,15 @@ const Semesters = () => {
                                                 required
                                             />
                                         </div>
-                                        <button
-                                            onClick={() => handleRemoveCourse(courseIndex)}
-                                            className="text-red-400 hover:text-red-300 ml-2 transition duration-200"
-                                            aria-label="Remove Course"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        {updatedCourses.length > 1 && (
+                                            <button
+                                                onClick={() => handleRemoveCourse(courseIndex)}
+                                                className="text-red-400 hover:text-red-300 ml-2 transition duration-200"
+                                                aria-label="Remove Course"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        )}
                                     </div>
                                 ))}
                             </div>
@@ -339,7 +387,10 @@ const Semesters = () => {
                                 <div>
                                     <button
                                         onClick={() => handleUpdate(semesters[editingIndex]._id)}
-                                        className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 mr-2"
+                                        className={`px-4 py-2 rounded ${
+                                            hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
+                                        } text-white mr-4`}
+                                        disabled={!hasChanges}
                                     >
                                         Update
                                     </button>
@@ -355,9 +406,45 @@ const Semesters = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* Confirmation Dialog for Deletion */}
+            <AnimatePresence>
+                {isConfirmDeleteOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[rgb(1,8,21)] p-6 rounded-lg w-full max-w-md"
+                        >
+                            <h2 className="text-lg font-bold mb-4">Confirm Deletion</h2>
+                            <p>Are you sure you want to delete this semester?</p>
+                            <div className="flex justify-between mt-6">
+                                <button
+                                    onClick={() => deleteSemester(semesters[semesterToDelete]._id)}
+                                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                >
+                                    Yes, Delete
+                                </button>
+                                <button
+                                    onClick={cancelDelete}
+                                    className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 };
 
 export default Semesters;
-

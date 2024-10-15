@@ -1,0 +1,31 @@
+.vignette {
+    position: relative;
+    padding: 20px; /* Adjust as needed */
+    background: white;
+    overflow: hidden;
+  }
+  
+  .vignette::before,
+  .vignette::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.8), transparent);
+  }
+  
+  .vignette::before {
+    left: 0;
+  }
+  
+  .vignette::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(255, 255, 255, 0.8), transparent);
+  }
+  
+  .dotted-background {
+    background-image: radial-gradient(circle, white 1px, transparent 1px);
+    background-size: 10px 10px; /* Adjust size of dots */
+  }
+  

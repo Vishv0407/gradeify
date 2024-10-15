@@ -40,47 +40,47 @@ const GridPattern = () => {
 };
 
 const MyCustomButton = ({ onClick, children }) => {
-    return (
-      <motion.button
-        onClick={onClick}
-        className="relative overflow-hidden group text-white px-8 py-3 rounded-full text-lg font-semibold uppercase tracking-wide border border-white cursor-pointer backdrop-blur-sm transition-all duration-200 ease-in-out"
-        whileTap={{ scale: 0.95 }}
-      >
-        <span className="relative z-10 flex items-center justify-center">
-          {children}
-        </span>
-        <span className="absolute inset-0 bg-white/20 backdrop-blur-sm opacity-0 group-hover:opacity-50 transition-opacity duration-75" />
-      </motion.button>
-    );
+  return (
+    <motion.button
+      onClick={onClick}
+      className="relative overflow-hidden group text-white px-8 py-3 rounded-full text-lg font-semibold uppercase tracking-wide border border-white cursor-pointer backdrop-blur-sm transition-all duration-200 ease-in-out"
+      whileTap={{ scale: 0.95 }}
+    >
+      <span className="relative z-10 flex items-center justify-center">
+        {children}
+      </span>
+      <span className="absolute inset-0 bg-white/20 backdrop-blur-sm opacity-0 group-hover:opacity-50 transition-opacity duration-75" />
+    </motion.button>
+  );
 };
 
 const Welcome = () => {
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate(); // Initialize useNavigate for redirection
-  
+
   const handleLoginSuccess = async (credentialResponse) => {
     try {
-        const decodedData = jwtDecode(credentialResponse.credential);
-        console.log(decodedData); // Check what is being decoded
-        // Send name and email to the backend
-        const response = await axios.post(`${backend}/api/auth/user`, {
-            googleId: credentialResponse.credential,
-            name: decodedData.name,
-            email: decodedData.email
-        });
-        console.log('User saved successfully:', response.data);
-        setUser(response.data);
-        navigate('/dashboard');
+      const decodedData = jwtDecode(credentialResponse.credential);
+      console.log(decodedData); // Check what is being decoded
+      // Send name and email to the backend
+      const response = await axios.post(`${backend}/api/auth/user`, {
+        googleId: credentialResponse.credential,
+        name: decodedData.name,
+        email: decodedData.email
+      });
+      console.log('User saved successfully:', response.data);
+      setUser(response.data);
+      navigate('/dashboard');
     } catch (error) {
-        console.error('Error decoding token or saving user:', error);
+      console.error('Error decoding token or saving user:', error);
     }
-};
+  };
 
   return (
     <div className="min-h-screen bg-[rgb(1,8,21)] text-white flex flex-col items-center justify-center p-4 overflow-hidden relative">
       <GridPattern />
       <main className="w-full max-w-4xl z-10">
-        <motion.div 
+        <motion.div
           className="text-center mb-12"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -112,12 +112,20 @@ const Welcome = () => {
           ))}
         </div>
 
-        <GoogleLogin
-                onSuccess={handleLoginSuccess}
-                onError={() => {
-                    console.log('Login Failed');
-                }}
+        <div className='flex justify-center items-center'>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.9}}
+          >
+            <GoogleLogin
+              onSuccess={handleLoginSuccess}
+              onError={() => {
+                console.log('Login Failed');
+              }}
             />
+          </motion.div>
+        </div>
       </main>
     </div>
   );
