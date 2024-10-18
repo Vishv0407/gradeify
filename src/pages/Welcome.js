@@ -7,6 +7,7 @@ import { backend } from '../data';
 import { UserContext } from '../context/UserContext';
 import { FcGoogle } from "react-icons/fc";
 import { motion } from 'framer-motion';
+import { toast, Toaster } from 'react-hot-toast';
 
 // Custom Card component
 const Card = ({ children, className = "" }) => {
@@ -61,14 +62,14 @@ const Welcome = () => {
   const handleLoginSuccess = async (credentialResponse) => {
     try {
       const decodedData = jwtDecode(credentialResponse.credential);
-      console.log(decodedData); // Check what is being decoded
+      // console.log(decodedData); // Check what is being decoded
       // Send name and email to the backend
       const response = await axios.post(`${backend}/api/auth/user`, {
         googleId: credentialResponse.credential,
         name: decodedData.name,
         email: decodedData.email
       });
-      console.log('User saved successfully:', response.data);
+      // console.log('User saved successfully:', response.data);
       setUser(response.data);
       navigate('/dashboard');
     } catch (error) {
@@ -78,6 +79,7 @@ const Welcome = () => {
 
   return (
     <div className="min-h-screen bg-[rgb(1,8,21)] text-white flex flex-col items-center justify-center p-4 overflow-hidden relative">
+      <Toaster />
       <GridPattern />
       <main className="w-full max-w-4xl z-10">
         <motion.div
@@ -116,12 +118,13 @@ const Welcome = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9}}
+            transition={{ duration: 0.9 }}
           >
             <GoogleLogin
               onSuccess={handleLoginSuccess}
               onError={() => {
                 console.log('Login Failed');
+                toast.error("Login Failed!");
               }}
             />
           </motion.div>

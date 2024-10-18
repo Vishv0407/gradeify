@@ -240,7 +240,7 @@ const Dashboard = () => {
                 {semesters.length > 0 && (
                     <div className="bg-white/5 p-6 rounded-lg mb-8">
                         <h3 className="text-xl font-semibold mb-2">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
-                        <h4 className="text-lg">Previous {semesters.length} Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4>
+                        {/* <h4 className="text-lg">Previous {semesters.length} Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4> */}
                     </div>
                 )}
 
@@ -303,7 +303,7 @@ const Dashboard = () => {
                             <button
                                 type="button"
                                 onClick={handleAddCourse}
-                                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out flex items-center"
+                                className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded transition duration-150 ease-in-out flex items-center"
                             >
                                 <Plus size={20} className="mr-2" /> Add Course
                             </button>
@@ -311,7 +311,7 @@ const Dashboard = () => {
                                 <button
                                     type="button"
                                     onClick={handleClearInputs}
-                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                                    className="bg-[#b58620] hover:bg-yellow-500 text-white px-4 py-2 rounded transition duration-150 ease-in-out"
                                 >
                                     Clear Inputs
                                 </button>
@@ -370,7 +370,9 @@ const Dashboard = () => {
                 </AnimatePresence>
 
                 {semesters.length > 0 ? (
-                    <Semesters />
+                    <Semesters  
+                    semesterNumber={semesterNumber}
+                    setSemesterNumber={setSemesterNumber} />
                 ) : (
                     <div></div>
                 )}

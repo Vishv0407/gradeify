@@ -76,7 +76,6 @@ exports.deleteSemester = async (req, res) => {
   try {
     // const { semesterId } = req.params;
     const { userId, semesterId } = req.body;
-    console.log(userId);
 
     // Find the semester to retrieve the course IDs
     const semesterToDelete = await Semester.findById(semesterId).populate('courses');

@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { backend } from '../data';
+import { toast, Toaster } from 'react-hot-toast';
 
 export const UserContext = createContext();
 
@@ -53,6 +54,7 @@ export const UserProvider = ({ children }) => {
         setUser(null);
         setSemesters([]);
         localStorage.removeItem('user'); // Remove user from localStorage
+        toast.success("Logged out 👋")
     };
 
     return (

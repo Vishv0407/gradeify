@@ -5,12 +5,17 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId="365465060299-tuvmclj1a2d9n8ftbhs3vuauoljgj6h7.apps.googleusercontent.com">
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+      />
       <BrowserRouter >
         <App />
       </BrowserRouter>

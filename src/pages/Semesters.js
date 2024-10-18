@@ -8,7 +8,7 @@ import { Bar } from 'react-chartjs-2';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { toast } from 'react-hot-toast';
 
-const Semesters = () => {
+const Semesters = ({ setSemesterNumber, semesterNumber }) => {
     const { user, semesters, setSemesters } = useContext(UserContext);
     const [isMobile, setMobile] = useState(window.innerWidth < 768);
     const [editingIndex, setEditingIndex] = useState(null);
@@ -143,8 +143,6 @@ const Semesters = () => {
             setEditingIndex(null); // Exit editing mode
             setIsModalOpen(false);
             toast.success('Semester updated successfully');
-
-            console.log(updatedCourses);
         } catch (error) {
             console.error('Error updating semester:', error);
             toast.error('Failed to update semester');
@@ -161,6 +159,7 @@ const Semesters = () => {
                 }
             });
             setSemesters((prev) => prev.filter((_, index) => index !== semesterToDelete));
+            setSemesterNumber(semesterNumber-1);
             toast.success('Semester deleted successfully');
         } catch (error) {
             console.error('Error deleting semester:', error);
