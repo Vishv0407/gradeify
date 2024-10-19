@@ -9,13 +9,12 @@ import { UserProvider } from './context/UserContext';
 import ReactGA from 'react-ga4';
 ReactGA.initialize('G-SCGDKHP04J');
 
-
 function App() {
 
   useEffect(() => {
     ReactGA.send({ hitType: "pageview", page: window.location.pathname });
   }, []);
-  
+
   return (
     <UserProvider>
       <Routes>
