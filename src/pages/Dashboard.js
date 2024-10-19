@@ -12,6 +12,8 @@ import toast, { Toaster } from 'react-hot-toast';
 import { HyperText } from '../components/HyperText';
 import CoolButton from '../components/CoolButton';
 import logo from '../assets/logo.png';
+import ReactGA from 'react-ga4';
+ReactGA.initialize('G-SCGDKHP04J');
 
 const Dashboard = () => {
     const { user, semesters = [], setSemesters, logout } = useContext(UserContext);
@@ -379,7 +381,14 @@ const Dashboard = () => {
 
                 <div className="flex justify-center items-center">
                     <CoolButton options={{ size: 25, particle: "circle" }}>
-                        <button className="border border-white px-4 py-2 text-lg rounded-2xl">
+                        <button 
+                        onClick={
+                            ReactGA.event({
+                                category: 'User',
+                                action: 'Clicked cool button'
+                              })
+                        }
+                        className="border border-white px-4 py-2 text-lg rounded-2xl">
                             Click me to celebrate!
                         </button>
                     </CoolButton>
