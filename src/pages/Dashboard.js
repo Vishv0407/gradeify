@@ -144,19 +144,38 @@ const Dashboard = () => {
     };
 
     const handleSaveCGPA = async () => {
+        // Input validation
+        if (!semesterNumber || courses.length === 0) {
+            toast.error('Enter a valid details');
+            return;
+        }
+    
+        let isValid = true;
+    
+        courses.forEach(course => {
+            if (!course.name || !course.credit || !course.cgpa || isNaN(course.credit) || isNaN(course.cgpa)) {
+                isValid = false;
+            }
+        });
+    
+        if (!isValid) {
+            toast.error('Invalid course details. Check name, credit, and CGPA.');
+            return;
+        }
+    
         try {
             // Calculate total credits and grades for the semester
             let totalCredits = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
                 return acc + (isNaN(credit) ? 0 : credit);
             }, 0);
-
+    
             let totalGrades = courses.reduce((acc, course) => {
                 const credit = parseFloat(course.credit);
                 const cgpa = parseFloat(course.cgpa);
                 return acc + (isNaN(credit) || isNaN(cgpa) ? 0 : credit * cgpa);
             }, 0);
-
+    
             // First, create the semester to get its ObjectId
             const semesterResponse = await axios.post(`${backend}/api/semester/addSemester`, {
                 userId: user._id,
@@ -166,18 +185,18 @@ const Dashboard = () => {
                 totalGrades: 0,    // Initially set total grades to 0
                 courses: []        // Initially empty
             });
-
+    
             const semesterId = semesterResponse.data._id;
-
+    
             // Now add the courses and associate them with the semester
             const courseResponse = await axios.post(`${backend}/api/course/addCourses`, {
                 courses,
                 userId: user._id,
                 semesterId: semesterId // Associate the courses with the newly created semester
             });
-
+    
             const courseIds = courseResponse.data.map(course => course._id);
-
+    
             // Update the semester with actual course IDs, total credits, and total grades
             await axios.put(`${backend}/api/semester/updateSemester`, {
                 semesterId,          // Update this specific semester
@@ -185,7 +204,7 @@ const Dashboard = () => {
                 totalGrades: totalGrades,
                 courses: courseIds,   // Update with the actual course IDs
             });
-
+    
             toast.success('CGPA saved successfully!');
             fetchUserData(user.email);
             handleClearInputs();
@@ -194,6 +213,7 @@ const Dashboard = () => {
             toast.error('Failed to save CGPA. Please try again.');
         }
     };
+    
 
     const handleLogout = () => {
         setIsConfirmLogoutOpen(true);
