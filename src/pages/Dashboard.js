@@ -261,7 +261,7 @@ const Dashboard = () => {
 
                 {semesters.length > 0 && (
                     <div className="bg-white/5 p-6 rounded-lg mb-8">
-                        <h3 className="text-xl font-semibold mb-2">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
+                        <h3 className="text-2xl font-bold">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
                         {/* <h4 className="text-lg">Previous {semesters.length} Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4> */}
                     </div>
                 )}
