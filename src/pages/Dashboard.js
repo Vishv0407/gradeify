@@ -27,7 +27,6 @@ const Dashboard = () => {
     const [isConfirmLogoutOpen, setIsConfirmLogoutOpen] = useState(false);
     const navigate = useNavigate();
 
-
     useEffect(() => {
         if (user && user.email) {
             fetchUserData(user.email);
@@ -151,9 +150,11 @@ const Dashboard = () => {
         }
     
         let isValid = true;
+
     
         courses.forEach(course => {
-            if (!course.name || !course.credit || !course.cgpa || isNaN(course.credit) || isNaN(course.cgpa)) {
+            console.log(course);
+            if (!course.courseCode || !course.credit || !course.cgpa || isNaN(course.credit) || isNaN(course.cgpa)) {
                 isValid = false;
             }
         });

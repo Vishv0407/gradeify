@@ -19,6 +19,9 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
     const [semesterToDelete, setSemesterToDelete] = useState(null);
     const [hasChanges, setHasChanges] = useState(false); // Track changes
 
+    const [calculatedCGPA, setCalculatedCGPA] = useState(0);
+    const [calculatedSGPA, setCalculatedSGPA] = useState(0);
+
     useEffect(() => {
         const handleResize = () => {
             setMobile(window.innerWidth < 768);
@@ -53,16 +56,33 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
     const handleEdit = (index) => {
         setEditingIndex(index);
         setUpdatedCourses(JSON.parse(JSON.stringify(semesters[index].courses)));
+    
+        // Calculate initial SGPA for the current semester
+        const initialSGPA = calculateSGPA(semesters[index].courses);
+        setCalculatedSGPA(initialSGPA);
+    
+        // Calculate initial CGPA for all semesters using the updated courses
+        const initialCGPA = calculateCGPA(semesters, semesters[index].courses, semesters[index].courses);
+        setCalculatedCGPA(initialCGPA);
+    
         setIsModalOpen(true);
     };
-
+    
     const handleCourseChange = (index, field, value) => {
         const updatedCoursesCopy = [...updatedCourses];
         updatedCoursesCopy[index][field] = value;
         setUpdatedCourses(updatedCoursesCopy);
         setHasChanges(true); // Mark changes as made
+    
+        // Calculate new SGPA
+        const newSGPA = calculateSGPA(updatedCoursesCopy);
+        setCalculatedSGPA(newSGPA);
+    
+        // Calculate CGPA based on updated courses and current semesters
+        const newCGPA = calculateCGPA(semesters, updatedCoursesCopy, semesters[editingIndex].courses);
+        setCalculatedCGPA(newCGPA);
     };
-
+    
     const handleAddCourse = () => {
         setUpdatedCourses((prev) => [...prev, { courseCode: '', cgpa: '', credit: '', _id: null }]);
         setHasChanges(true); // Mark changes as made
@@ -74,8 +94,17 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
             updatedCoursesCopy.splice(index, 1);
             setUpdatedCourses(updatedCoursesCopy);
             setHasChanges(true); // Mark changes as made
+    
+            // Recalculate SGPA
+            const newSGPA = calculateSGPA(updatedCoursesCopy);
+            setCalculatedSGPA(newSGPA);
+    
+            // Recalculate CGPA based on updated courses and current semesters
+            const newCGPA = calculateCGPA(semesters, updatedCoursesCopy, semesters[editingIndex].courses);
+            setCalculatedCGPA(newCGPA);
         }
     };
+    
 
     const updateCourse = async (courseId, course) => {
         try {
@@ -159,7 +188,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                 }
             });
             setSemesters((prev) => prev.filter((_, index) => index !== semesterToDelete));
-            setSemesterNumber(semesterNumber-1);
+            setSemesterNumber(semesterNumber - 1);
             toast.success('Semester deleted successfully');
         } catch (error) {
             console.error('Error deleting semester:', error);
@@ -180,13 +209,34 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
         setSemesterToDelete(null);
     };
 
-    const calculateCGPA = () => {
+    const calculateCGPA = (semesters, updatedCourses, originalCourses) => {
+        // Get total credits and grades from existing semesters
         const totalCredits = semesters.reduce((total, semester) =>
-            total + semester.courses.reduce((sum, course) => sum + parseFloat(course.credit || 0), 0), 0);
+            total + semester.courses.reduce((sum, course) => sum + parseFloat(course.credit || 0), 0), 0
+        );
+    
         const totalGrades = semesters.reduce((total, semester) =>
-            total + semester.courses.reduce((sum, course) => sum + (parseFloat(course.cgpa || 0) * parseFloat(course.credit || 0)), 0), 0);
-
-        return totalGrades / totalCredits || 0;
+            total + semester.courses.reduce((sum, course) => sum + (parseFloat(course.cgpa || 0) * parseFloat(course.credit || 0)), 0), 0
+        );
+    
+        // Calculate updated credits and grades
+        const updatedCredits = updatedCourses.reduce((total, course) => total + parseFloat(course.credit || 0), 0);
+        const updatedGrades = updatedCourses.reduce((total, course) => total + (parseFloat(course.cgpa || 0) * parseFloat(course.credit || 0)), 0);
+    
+        // If the original courses are included in updatedCourses, exclude them
+        const originalTotalCredits = originalCourses.reduce((total, course) => total + parseFloat(course.credit || 0), 0);
+        const originalTotalGrades = originalCourses.reduce((total, course) => total + (parseFloat(course.cgpa || 0) * parseFloat(course.credit || 0)), 0);
+    
+        const finalTotalCredits = totalCredits + updatedCredits - originalTotalCredits;
+        const finalTotalGrades = totalGrades + updatedGrades - originalTotalGrades;
+    
+        return finalTotalCredits > 0 ? (finalTotalGrades / finalTotalCredits) : 0;
+    };
+    
+    const calculateSGPA = (courses) => {
+        const totalCredits = courses.reduce((total, course) => total + parseFloat(course.credit || 0), 0);
+        const totalGrades = courses.reduce((total, course) => total + (parseFloat(course.cgpa || 0) * parseFloat(course.credit || 0)), 0);
+        return totalCredits > 0 ? (totalGrades / totalCredits) : 0;
     };
 
     const toggleDropdown = (index) => {
@@ -267,7 +317,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                                 <span className="font-medium">{course.courseCode}</span>
                                                 <span>CGPA: {course.cgpa}</span>
                                                 <span>Credit: {course.credit}</span>
-                                                
+
                                             </div>
                                         </div>
                                     ))}
@@ -336,6 +386,10 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                 </button>
                             </div>
                             <div className="space-y-4">
+                                <div className="mt-4">
+                                    <p className="text-lg">Calculated SGPA: {calculatedSGPA.toFixed(2)}</p>
+                                    <p className="text-lg">Calculated CGPA: {calculatedCGPA.toFixed(2)}</p>
+                                </div>
                                 {updatedCourses.map((course, courseIndex) => (
                                     <div key={courseIndex} className="bg-gray-800 p-3 rounded-lg flex items-center justify-between">
                                         <div className="flex flex-wrap gap-4 w-full">
@@ -386,9 +440,8 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                 <div>
                                     <button
                                         onClick={() => handleUpdate(semesters[editingIndex]._id)}
-                                        className={`px-4 py-2 rounded ${
-                                            hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
-                                        } text-white mr-4`}
+                                        className={`px-4 py-2 rounded ${hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
+                                            } text-white mr-4`}
                                         disabled={!hasChanges}
                                     >
                                         Update
