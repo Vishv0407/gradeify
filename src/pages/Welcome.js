@@ -99,7 +99,7 @@ const Welcome = () => {
           ))}
         </div>
 
-        <div className='flex justify-center items-center'>
+        <div className='flex justify-center items-center mb-6'>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
