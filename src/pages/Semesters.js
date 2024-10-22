@@ -289,7 +289,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
 
     return (
         <div className="bg-[rgb(1,8,21)] text-white p-4 rounded-lg shadow-lg">
-            <h1 className="text-xl md:text-3xl font-bold mb-6">Semesters Information</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-6">Semesters Information</h1>
 
             {semesters.map((semester, index) => (
                 <div key={index} className="mb-8 border-b border-gray-700 pb-6">
@@ -297,7 +297,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                         onClick={() => toggleDropdown(index)}
                         className="flex items-center justify-between w-full text-left text-xl font-semibold mb-4 focus:outline-none"
                     >
-                        <span className='text-lg'>Semester {index + 1}</span>
+                        <span className='text-lg text-[#ffffffaa]'>Semester {index + 1}</span>
                         {dropdowns[index] ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                     </button>
 

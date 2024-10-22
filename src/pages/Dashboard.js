@@ -269,7 +269,7 @@ const Dashboard = () => {
 
                 <section className="bg-white/5 p-6 rounded-lg mb-8">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">Add New Semester</h2>
-                    <h3 className="text-xl mb-4">Semester: {semesterNumber}</h3>
+                    <h3 className="text-lg mb-4">Semester: {semesterNumber}</h3>
 
                     <form className="space-y-6">
                         {courses.map((course, index) => (
