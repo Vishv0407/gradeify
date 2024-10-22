@@ -40,21 +40,6 @@ const GridPattern = () => {
   );
 };
 
-const MyCustomButton = ({ onClick, children }) => {
-  return (
-    <motion.button
-      onClick={onClick}
-      className="relative overflow-hidden group text-white px-8 py-3 rounded-full text-lg font-semibold uppercase tracking-wide border border-white cursor-pointer backdrop-blur-sm transition-all duration-200 ease-in-out"
-      whileTap={{ scale: 0.95 }}
-    >
-      <span className="relative z-10 flex items-center justify-center">
-        {children}
-      </span>
-      <span className="absolute inset-0 bg-white/20 backdrop-blur-sm opacity-0 group-hover:opacity-50 transition-opacity duration-75" />
-    </motion.button>
-  );
-};
-
 const Welcome = () => {
   const { setUser } = useContext(UserContext);
   const navigate = useNavigate(); // Initialize useNavigate for redirection

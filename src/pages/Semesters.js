@@ -105,7 +105,6 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
         }
     };
     
-
     const updateCourse = async (courseId, course) => {
         try {
             await axios.put(`${backend}/api/course/updateCourse/${courseId}`, {
