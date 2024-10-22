@@ -262,13 +262,13 @@ const Dashboard = () => {
 
                 {semesters.length > 0 && (
                     <div className="bg-white/5 p-6 rounded-lg mb-8">
-                        <h3 className="text-2xl font-bold">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
+                        <h3 className="text-lg md:text-2xl font-bold">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
                         {/* <h4 className="text-lg">Previous {semesters.length} Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4> */}
                     </div>
                 )}
 
                 <section className="bg-white/5 p-6 rounded-lg mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Add New Semester</h2>
+                    <h2 className="text xl md:text-2xl font-bold mb-4">Add New Semester</h2>
                     <h3 className="text-xl mb-4">Semester: {semesterNumber}</h3>
 
                     <form className="space-y-6">
