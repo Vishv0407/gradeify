@@ -297,7 +297,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                         onClick={() => toggleDropdown(index)}
                         className="flex items-center justify-between w-full text-left text-xl font-semibold mb-4 focus:outline-none"
                     >
-                        <span>Semester {index + 1}</span>
+                        <span className='text-lg'>Semester {index + 1}</span>
                         {dropdowns[index] ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                     </button>
 
