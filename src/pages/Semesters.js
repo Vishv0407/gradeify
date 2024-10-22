@@ -432,14 +432,14 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                             <div className="flex justify-between mt-6">
                                 <button
                                     onClick={handleAddCourse}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                                 >
                                     Add Course
                                 </button>
                                 <div>
                                     <button
                                         onClick={() => handleUpdate(semesters[editingIndex]._id)}
-                                        className={`px-4 py-2 rounded ${hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
+                                        className={`px-2 py-1 rounded ${hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
                                             } text-white mr-4`}
                                         disabled={!hasChanges}
                                     >
@@ -447,7 +447,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                     </button>
                                     <button
                                         onClick={() => setIsModalOpen(false)}
-                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                        className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
                                     >
                                         Cancel
                                     </button>
