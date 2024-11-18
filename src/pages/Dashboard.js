@@ -256,7 +256,7 @@ const Dashboard = () => {
                 <HyperText
                     text={`Welcome, ${user.name}`}
                     duration={1000} // Optional: Adjust the animation duration
-                    className=" text-lg md:text-2xl font-bold my-4" // Optional: Custom class names
+                    className=" text-lg md:text-2xl font-bold my-4 text-yellow-400" // Optional: Custom class names
                     animateOnLoad={true} // Optional: If you want the animation to trigger on load
                 />
 
