@@ -215,7 +215,6 @@ const Dashboard = () => {
         }
     };
     
-
     const handleLogout = () => {
         setIsConfirmLogoutOpen(true);
     };
@@ -235,22 +234,21 @@ const Dashboard = () => {
         <div className="min-h-screen bg-[rgb(1,8,21)] text-white p-4">
             <Toaster position="top-right" />
             <header className=" w-full border-b border-white/10 pb-4 mb-6">
-                <div className='w-[90%] m-auto flex justify-between items-center'>
+                <div className='sm:w-full md:w-[95%] m-auto flex justify-between items-end'>
                     <div className='flex flex-row gap-2 items-center'>
                         <img src={logo} className='w-[28px] h-[28px] rounded-md'></img>
                         <h1 className="text-3xl font-bold">Gradeify</h1>
                     </div>
                     <button
                         onClick={handleLogout}
-                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition duration-300 ease-in-out"
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition duration-300 ease-in-out"
                     >
                         Log Out
                     </button>
                 </div>
             </header>
 
-            <div className="max-w-6xl mx-auto px-4 lg:px-0">
-
+            <div className="max-w-6xl mx-auto sm:px-3 md:px-4 lg:px-4">
                 <HyperText
                     text={`Welcome, ${user.name}`}
                     duration={1000} // Optional: Adjust the animation duration
@@ -259,19 +257,19 @@ const Dashboard = () => {
                 />
 
                 {semesters.length > 0 && (
-                    <div className="bg-white/5 p-6 rounded-lg mb-8">
-                        <h3 className="text-lg md:text-2xl font-bold">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
+                    <div className="bg-white/5 p-3 pl-4 md:p-6 rounded-lg mb-8 border-[1px] border-white/5">
+                        <h3 className="text-lg md:text-2xl text-yellow-400 font-bold">Your Current CGPA: {finalCgpa !== null ? finalCgpa : 'N/A'}</h3>
                         {/* <h4 className="text-lg">Previous {semesters.length} Semester SGPA: {semesters[semesters.length - 1].sgpa}</h4> */}
                     </div>
                 )}
 
-                <section className="bg-white/5 p-6 rounded-lg mb-8">
+                <section className="bg-white/5 p-4 md:p-6 rounded-lg mb-8 border-[1px] border-white/5">
                     <h2 className="text-xl md:text-2xl font-bold mb-4">Add New Semester</h2>
                     <h3 className="text-lg mb-4">Semester: {semesterNumber}</h3>
 
                     <form className="space-y-6">
                         {courses.map((course, index) => (
-                            <div key={index} className="relative bg-white/10 p-6 rounded-lg mt-8">
+                            <div key={index} className="relative bg-white/10 p-4 md:p-6 rounded-lg mt-8">
                                 {courses.length > 1 && ( // Only show button if there is more than one course
                                     <button
                                         type="button"
@@ -295,10 +293,14 @@ const Dashboard = () => {
                                     <label className="flex-1 min-w-[200px]">
                                         <span className="block mb-1">Credit:</span>
                                         <input
-                                            type="number"
-                                            min={0}
+                                            type="text"
                                             value={course.credit}
-                                            onChange={(e) => handleCourseChange(index, 'credit', e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (/^\d*\.?\d*$/.test(value)) {
+                                                    handleCourseChange(index, 'credit', value);
+                                                }
+                                            }}
                                             className="input-shadow w-full bg-white/10 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                                             required
                                         />
@@ -306,14 +308,18 @@ const Dashboard = () => {
                                     <label className="flex-1 min-w-[200px]">
                                         <span className="block mb-1">CGPA:</span>
                                         <input
-                                            type="number"
-                                            step="0.01"
-                                            min={0}
+                                            type="text"
                                             value={course.cgpa}
-                                            onChange={(e) => handleCourseChange(index, 'cgpa', e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                if (/^\d*\.?\d*$/.test(value)) {
+                                                    handleCourseChange(index, 'cgpa', value);
+                                                }
+                                            }}
                                             className="input-shadow w-full bg-white/10 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
                                             required
                                         />
+
                                     </label>
                                 </div>
                             </div>
@@ -362,7 +368,7 @@ const Dashboard = () => {
 
                 {/* SGPA Graph */}
                 {semesters.length > 0 && (
-                    <div className="bg-white/5 p-6 rounded-lg mb-8">
+                    <div className="bg-white/5 p-6 rounded-lg mb-8 border-[1px] border-white/5">
                         <h3 className="text-xl font-bold mb-4">SGPA Over Semesters</h3>
                         <SgpaGraph semesters={semesters} handleSGPAClick={handleSGPAClick} />
                     </div>

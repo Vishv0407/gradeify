@@ -292,7 +292,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
             <h1 className="text-2xl md:text-3xl font-bold mb-6">Semesters Information</h1>
 
             {semesters.map((semester, index) => (
-                <div key={index} className="mb-8 border-b border-gray-700 pb-6">
+                <div key={index} className="mb-6 border-b border-gray-700 pb-4">
                     <button
                         onClick={() => toggleDropdown(index)}
                         className="flex items-center justify-between w-full text-left text-xl font-semibold mb-2 focus:outline-none"
@@ -309,7 +309,7 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                 exit={{ opacity: 0, height: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <div className="space-y-2 mb-8">
+                                <div className="space-y-2 mb-8 mt-6">
                                     {semester.courses.map((course, courseIndex) => (
                                         <div key={courseIndex} className="w-full md:w-[50%] m-auto flex items-center justify-between p-2 bg-gray-800 rounded-lg">
                                             <div className="w-5 flex-1 flex items-center justify-between space-x-4">
@@ -344,14 +344,14 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                 <div className="flex justify-end space-x-2 mt-4 gap-2">
                                     <button
                                         onClick={() => handleEdit(index)}
-                                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
                                     >
                                         Edit
                                     </button>
                                     {index === semesters.length - 1 && (
                                         <button
                                             onClick={() => handleConfirmDelete(index)}
-                                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
                                         >
                                             Delete
                                         </button>
@@ -401,17 +401,27 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                                 required
                                             />
                                             <input
-                                                type="number"
+                                                type="text"
                                                 value={course.cgpa}
-                                                onChange={(e) => handleCourseChange(courseIndex, 'cgpa', e.target.value)}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (/^\d*\.?\d*$/.test(value)) {
+                                                        handleCourseChange(courseIndex, 'cgpa', value);
+                                                    }
+                                                }}
                                                 placeholder="CGPA"
                                                 className="bg-gray-700 text-white p-2 rounded w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 required
                                             />
                                             <input
-                                                type="number"
+                                                type="text"
                                                 value={course.credit}
-                                                onChange={(e) => handleCourseChange(courseIndex, 'credit', e.target.value)}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (/^\d*\.?\d*$/.test(value)) {
+                                                        handleCourseChange(courseIndex, 'credit', value);
+                                                    }
+                                                }}
                                                 placeholder="Credit"
                                                 className="bg-gray-700 text-white p-2 rounded w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 required
