@@ -407,7 +407,7 @@ const Dashboard = () => {
                                 action: 'Clicked cool button'
                               })
                         }
-                        className="border border-white px-4 py-2 text-lg rounded-2xl">
+                        className="border border-white px-4 py-2 text-lg rounded-2xl select-none">
                             Click me to celebrate!
                         </button>
                     </CoolButton>
