@@ -25,6 +25,7 @@ const Dashboard = () => {
     const [selectedSemester, setSelectedSemester] = useState(null);
     const [barChartData, setBarChartData] = useState(null);
     const [isConfirmLogoutOpen, setIsConfirmLogoutOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -143,27 +144,29 @@ const Dashboard = () => {
     };
 
     const handleSaveCGPA = async () => {
+        if (isSubmitting) return; // Prevent double submission
+        
         // Input validation
         if (!semesterNumber || courses.length === 0) {
-            toast.error('Enter a valid details');
+            toast.error('Enter valid details');
             return;
         }
-    
-        let isValid = true;
 
-    
+        let isValid = true;
         courses.forEach(course => {
-            console.log(course);
             if (!course.courseCode || !course.credit || !course.cgpa || isNaN(course.credit) || isNaN(course.cgpa)) {
                 isValid = false;
             }
         });
-    
+
         if (!isValid) {
             toast.error('Invalid course details. Check name, credit, and CGPA.');
             return;
         }
-    
+
+        setIsSubmitting(true);
+        const loadingToast = toast.loading('Saving semester data...');
+
         try {
             // Calculate total credits and grades for the semester
             let totalCredits = courses.reduce((acc, course) => {
@@ -206,12 +209,14 @@ const Dashboard = () => {
                 courses: courseIds,   // Update with the actual course IDs
             });
     
-            toast.success('CGPA saved successfully!');
+            toast.success('CGPA saved successfully!', { id: loadingToast });
             fetchUserData(user.email);
             handleClearInputs();
         } catch (error) {
             console.error('Error saving semester and courses:', error);
-            toast.error('Failed to save CGPA. Please try again.');
+            toast.error('Failed to save CGPA. Please try again.', { id: loadingToast });
+        } finally {
+            setIsSubmitting(false);
         }
     };
     
@@ -231,20 +236,22 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[rgb(1,8,21)] text-white p-4">
+        <div className="min-h-screen bg-[rgb(1,8,21)] text-white p-4 pb-20 md:pb-4">
             <Toaster position="top-right" />
-            <header className=" w-full border-b border-white/10 pb-4 mb-6">
+            <header className="w-full border-b border-white/10 pb-4 mb-6">
                 <div className='sm:w-full md:w-[95%] m-auto flex justify-between items-end'>
                     <div className='flex flex-row gap-2 items-center'>
-                        <img src={logo} className='w-[28px] h-[28px] rounded-md'></img>
+                        <img src={logo} className='w-[28px] h-[28px] rounded-md' alt="logo" />
                         <h1 className="text-3xl font-bold">Gradeify</h1>
                     </div>
-                    <button
-                        onClick={handleLogout}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition duration-300 ease-in-out"
-                    >
-                        Log Out
-                    </button>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={handleLogout}
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition duration-300 ease-in-out"
+                        >
+                            Log Out
+                        </button>
+                    </div>
                 </div>
             </header>
 
@@ -358,9 +365,10 @@ const Dashboard = () => {
                         <h4 className="text-xl">SGPA for this semester: {finalSgpa}</h4>
                         <button
                             onClick={handleSaveCGPA}
-                            className="bg-white text-blue-500 hover:bg-blue-100 px-4 py-2 rounded transition duration-300 ease-in-out mt-4 font-semibold"
+                            disabled={isSubmitting}
+                            className={`bg-white text-blue-500 hover:bg-blue-100 px-4 py-2 rounded transition duration-300 ease-in-out mt-4 font-semibold ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            Save CGPA
+                            {isSubmitting ? 'Saving...' : 'Save CGPA'}
                         </button>
                     </motion.div>
                 )}

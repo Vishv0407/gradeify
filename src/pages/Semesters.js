@@ -22,6 +22,9 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
     const [calculatedCGPA, setCalculatedCGPA] = useState(0);
     const [calculatedSGPA, setCalculatedSGPA] = useState(0);
 
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     useEffect(() => {
         const handleResize = () => {
             setMobile(window.innerWidth < 768);
@@ -120,8 +123,11 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
     };
 
     const handleUpdate = async (semesterId) => {
+        setIsUpdating(true);
         try {
-            const userId = semesters[0]?.courses[0].userId; // Replace this with the actual user ID you have
+            const userId = semesters[0]?.courses[0].userId;
+            toast.loading('Updating semester...', { id: 'updateSemester' });
+            
             // Loop through updated courses and compare them with the old courses
             for (let courseIndex = 0; courseIndex < updatedCourses.length; courseIndex++) {
                 const updatedCourse = updatedCourses[courseIndex];
@@ -167,32 +173,37 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                 courses: updatedCourses,
             };
 
-            setSemesters(updatedSemesters); // Update the semesters state immediately with the new data
-            setEditingIndex(null); // Exit editing mode
+            toast.success('Semester updated successfully', { id: 'updateSemester' });
+            setSemesters(updatedSemesters);
+            setEditingIndex(null);
             setIsModalOpen(false);
-            toast.success('Semester updated successfully');
         } catch (error) {
             console.error('Error updating semester:', error);
-            toast.error('Failed to update semester');
+            toast.error('Failed to update semester', { id: 'updateSemester' });
+        } finally {
+            setIsUpdating(false);
+            setHasChanges(false);
         }
-        setHasChanges(false);
     };
 
     const deleteSemester = async (semesterId) => {
+        setIsDeleting(true);
         try {
+            toast.loading('Deleting semester...', { id: 'deleteSemester' });
             await axios.delete(`${backend}/api/semester/deleteSemester`, {
-                data: { // Pass the data here
+                data: {
                     userId: user._id,
                     semesterId: semesterId
                 }
             });
             setSemesters((prev) => prev.filter((_, index) => index !== semesterToDelete));
             setSemesterNumber(semesterNumber - 1);
-            toast.success('Semester deleted successfully');
+            toast.success('Semester deleted successfully', { id: 'deleteSemester' });
         } catch (error) {
             console.error('Error deleting semester:', error);
-            toast.error('Failed to delete semester');
+            toast.error('Failed to delete semester', { id: 'deleteSemester' });
         } finally {
+            setIsDeleting(false);
             setIsConfirmDeleteOpen(false);
             setSemesterToDelete(null);
         }
@@ -449,11 +460,12 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                 <div>
                                     <button
                                         onClick={() => handleUpdate(semesters[editingIndex]._id)}
-                                        className={`px-2 py-1 rounded ${hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
-                                            } text-white mr-4`}
-                                        disabled={!hasChanges}
+                                        className={`px-2 py-1 rounded ${
+                                            hasChanges ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-500 cursor-not-allowed'
+                                        } text-white mr-4`}
+                                        disabled={!hasChanges || isUpdating}
                                     >
-                                        Update
+                                        {isUpdating ? 'Updating...' : 'Update'}
                                     </button>
                                     <button
                                         onClick={() => setIsModalOpen(false)}
@@ -489,8 +501,9 @@ const Semesters = ({ setSemesterNumber, semesterNumber }) => {
                                 <button
                                     onClick={() => deleteSemester(semesters[semesterToDelete]._id)}
                                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                    disabled={isDeleting}
                                 >
-                                    Yes, Delete
+                                    {isDeleting ? 'Deleting...' : 'Yes, Delete'}
                                 </button>
                                 <button
                                     onClick={cancelDelete}
