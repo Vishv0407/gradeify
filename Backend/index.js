@@ -7,6 +7,7 @@ const database = require('./config/database');
 const courseRoutes = require('./routes/Courses');
 const semesterRoutes = require('./routes/Semesters');
 const userRoutes = require('./routes/User');
+const adminRoutes = require('./routes/Admin');
 
 require('dotenv').config();
 
@@ -19,6 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/course', courseRoutes);
 app.use('/api/semester', semesterRoutes);
 app.use('/api/auth', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Middleware
 app.use(session({ secret: 'your_secret_key', resave: false, saveUninitialized: true }));

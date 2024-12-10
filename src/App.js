@@ -5,6 +5,7 @@ import Welcome from './pages/Welcome';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
 import Semesters from './pages/Semesters';
+import AdminUsers from './pages/AdminUsers';
 import { UserProvider } from './context/UserContext';
 import ReactGA from 'react-ga4';
 ReactGA.initialize('G-SCGDKHP04J');
@@ -22,6 +23,7 @@ function App() {
         <Route path='/home' element={<Home />}/>
         <Route path='/dashboard' element={<Dashboard />}/>
         <Route path='/semesters' element={<Semesters />}/>
+        <Route path='/admin/users' element={<AdminUsers />}/>
       </Routes>
     </UserProvider>
   )
